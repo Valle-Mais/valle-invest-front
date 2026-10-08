@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-script: Great Vibes, cursive;
+  --color-sv-green: #1e462e;
+  --color-sv-green-light: #2a553a;
+  --color-sv-gold: #c7a84c;
+  --color-sv-gold-dark: #b3913b;
+  --color-sv-cream: #f0ead6;
+}
+
+

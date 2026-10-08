@@ -1,0 +1,170 @@
+<div class="space-y-8">
+
+  <!-- Cabeçalho e Seletor de Cliente -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-800 dark:text-white">
+        {{ selectedClient ? 'Gerir Carteira: ' + selectedClient.name : 'Selecionar Cliente' }}
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400">Adicione operações e acompanhe o desempenho do cliente.</p>
+    </div>
+    <div>
+      <label for="client-select" class="sr-only">Selecionar Cliente</label>
+      <select id="client-select" [ngModel]="selectedClientId" (change)="onClientChange($event)" class="w-full sm:w-64 px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-sv-green">
+        <option [ngValue]="null" disabled>Selecione um cliente...</option>
+        <option *ngFor="let client of allClients" [value]="client.id">{{ client.name }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Conteúdo de Gestão -->
+  <div *ngIf="selectedClient; else noClientSelected" class="space-y-8">
+
+    <!-- Cartões de Resumo -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Saldo em Conta -->
+      <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">Saldo em Conta</h3>
+          <button *ngIf="!isEditingBalance" (click)="toggleBalanceEdit(true)" class="text-slate-400 hover:text-sv-green">
+            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
+          </button>
+        </div>
+        <div *ngIf="!isEditingBalance" class="mt-1">
+          <p class="text-3xl font-bold text-sv-green">R$ {{ selectedClient.totalBalance.toFixed(2) }}</p>
+        </div>
+        <div *ngIf="isEditingBalance" class="mt-2 flex items-center gap-2">
+          <input type="number" [(ngModel)]="editableBalance" class="w-full px-2 py-1 text-lg font-bold text-sv-green bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md">
+          <button (click)="saveBalance()" class="p-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+          </button>
+          <button (click)="toggleBalanceEdit(false)" class="p-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      </div>
+      <!-- Valor Investido -->
+      <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">Valor Investido</h3>
+        <p class="text-3xl font-bold text-slate-800 dark:text-white mt-1">R$ {{ selectedClient.investedAmount.toFixed(2) }}</p>
+      </div>
+      <!-- Resultado (Mês) -->
+      <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">Resultado (Mês)</h3>
+        <p class="text-3xl font-bold mt-1" [ngClass]="selectedClient.mtdPnlValue >= 0 ? 'text-green-500' : 'text-red-500'">
+          {{ selectedClient.mtdPnlValue >= 0 ? '+' : '' }} R$ {{ selectedClient.mtdPnlValue.toFixed(2) }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Formulário para Adicionar Operação -->
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+      <div class="px-6 py-3 border-b border-slate-200 dark:border-slate-800">
+        <h3 class="text-sm font-semibold text-slate-800 dark:text-white">Adicionar Nova Operação</h3>
+      </div>
+      <form (ngSubmit)="addOperation()" #operationForm="ngForm" class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+        <input type="date" name="date" [(ngModel)]="newOperation.date" class="px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg">
+        <select name="type" [(ngModel)]="newOperation.type" class="px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg">
+          <option>Compra</option>
+          <option>Venda</option>
+        </select>
+        <select name="asset" [(ngModel)]="newOperation.asset" required class="px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg">
+          <option value="" disabled>Selecione um ativo...</option>
+          <option *ngFor="let asset of allAssets" [value]="asset.ticker">{{ asset.ticker }}</option>
+        </select>
+        <input type="number" name="quantity" [(ngModel)]="newOperation.quantity" placeholder="Quantidade" required class="px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg">
+        <input type="number" name="price" [(ngModel)]="newOperation.price" placeholder="Preço (R$)" required class="px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg">
+        <button type="submit" [disabled]="!operationForm.valid" class="w-full py-2 text-sm font-semibold bg-sv-green text-white rounded-lg hover:bg-sv-green-light disabled:bg-slate-400 disabled:cursor-not-allowed">Adicionar</button>
+      </form>
+    </div>
+
+    <!-- Grelha para Carteira e Solicitações -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <!-- Carteira Atual -->
+      <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-[500px]">
+        <div class="px-6 py-3 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+          <h3 class="text-sm font-semibold text-slate-800 dark:text-white">Carteira Atual</h3>
+        </div>
+        <div class="overflow-y-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 uppercase sticky top-0">
+              <tr>
+                <th class="px-6 py-3">Ativo</th>
+                <th class="px-6 py-3 text-right">Quantidade</th>
+                <th class="px-6 py-3 text-right">Preço Médio</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+              <tr *ngFor="let item of selectedClient.portfolio">
+                <td class="px-6 py-4 font-semibold text-slate-800 dark:text-white">{{ item.asset }}</td>
+                <td class="px-6 py-4 text-right font-mono">{{ item.quantity }}</td>
+                <td class="px-6 py-4 text-right font-mono">R$ {{ item.avgPrice.toFixed(2) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Solicitações -->
+      <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-[500px]">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+          <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Solicitações de Operação</h3>
+          <div class="flex items-center gap-2">
+            <select [(ngModel)]="requestTypeFilter" (ngModelChange)="onFilterChange()" class="w-full px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md">
+              <option value="Todos">Todos os Tipos</option>
+              <option value="Compra">Compra</option>
+              <option value="Venda">Venda</option>
+              <option value="Aporte">Aporte</option>
+              <option value="Resgate">Resgate</option>
+            </select>
+            <select [(ngModel)]="requestStatusFilter" (ngModelChange)="onFilterChange()" class="w-full px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md">
+              <option value="Todos">Todos os Status</option>
+              <option value="Pendente">Pendente</option>
+              <option value="Concluído">Concluído</option>
+            </select>
+          </div>
+        </div>
+        <ul class="divide-y divide-slate-200 dark:divide-slate-800 overflow-y-auto">
+          <li *ngFor="let req of filteredAndPaginatedRequests" class="p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <p class="font-semibold" [ngClass]="{'text-green-500': req.type === 'Compra' || req.type === 'Aporte', 'text-red-500': req.type === 'Venda' || req.type === 'Resgate'}">
+                {{ req.type }} <span *ngIf="req.asset">de {{ req.asset }}</span>
+              </p>
+              <p class="font-mono font-semibold text-slate-800 dark:text-white">
+                <span *ngIf="req.value">R$ {{ req.value.toFixed(2) }}</span>
+                <span *ngIf="req.quantity">{{ req.quantity }} &#64; R$ {{ req.price.toFixed(2) }}</span>
+              </p>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+              <p><strong>Solicitado em:</strong> {{ req.date }}</p>
+              <p><strong>Agendamento:</strong> {{ req.schedule }}</p>
+            </div>
+            <div *ngIf="req.status === 'Pendente'" class="pt-2">
+              <button (click)="processRequest(req)" class="w-full py-2 text-xs font-bold bg-yellow-400/20 text-yellow-700 dark:text-yellow-300 rounded-lg hover:bg-yellow-400/30">
+                Processar {{ req.type }}
+              </button>
+            </div>
+             <div *ngIf="req.status === 'Concluído'" class="pt-2 flex items-center justify-center gap-2 text-xs text-green-500">
+              <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>Processado</span>
+            </div>
+          </li>
+        </ul>
+        <div class="p-4 flex items-center justify-between border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
+          <span class="text-xs text-slate-500 dark:text-slate-400">Pág {{ requestsCurrentPage }} de {{ requestsTotalPages }}</span>
+          <div class="flex items-center gap-1">
+            <button (click)="requestsPreviousPage()" [disabled]="requestsCurrentPage === 1" class="px-2 py-1 text-xs rounded-md border border-slate-300 dark:border-slate-700 disabled:opacity-50">Ant</button>
+            <button (click)="requestsNextPage()" [disabled]="requestsCurrentPage === requestsTotalPages" class="px-2 py-1 text-xs rounded-md border border-slate-300 dark:border-slate-700 disabled:opacity-50">Próx</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noClientSelected>
+    <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-xl border">
+      <h3 class="mt-2 text-lg font-medium text-slate-900 dark:text-white">Nenhum cliente selecionado</h3>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Por favor, selecione um cliente na lista acima para começar a gerir.</p>
+    </div>
+  </ng-template>
+</div>
