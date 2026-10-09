@@ -4,7 +4,7 @@ Dois scripts recuperados da análise de 26/09/2026. Permitem rodar o front e cap
 
 ## mock-api.mjs
 
-Servidor HTTP na porta 3000 que imita os endpoints da `valle-api` com dados fictícios: 1 admin, 6 clientes, transações, operações do fundo e séries de performance com CDI e Ibovespa.
+Servidor HTTP na porta 3000 que imita os endpoints da `valle-invest-api` com dados fictícios: 1 admin, 6 clientes, transações, operações do fundo e séries de performance com CDI e Ibovespa.
 
 Rotas servidas: `POST /auth/verify-token`, `GET /clients`, `GET /clients/:id`, `GET /client-transactions`, `GET /client-transactions/pending/count`, `GET /fund-operations`, `GET /performance/admin/summary`, `GET /performance/:clientId`.
 

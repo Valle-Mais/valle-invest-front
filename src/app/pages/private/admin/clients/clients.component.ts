@@ -242,6 +242,11 @@ export class ClientsComponent implements OnInit {
         role: user.role,
         totalInvestido: user.totalInvestido
       });
+      // Na edição só o nome pode mudar. Email é a identidade de login,
+      // role não muda por aqui e totalInvestido é derivado das transações.
+      this.userForm.get('email')!.disable();
+      this.userForm.get('role')!.disable();
+      this.userForm.get('totalInvestido')!.disable();
     } else {
       this.panelTitle = 'Adicionar Novo Usuário';
       this.currentUserId = null;
@@ -251,6 +256,9 @@ export class ClientsComponent implements OnInit {
         role: 'client',
         totalInvestido: 0
       });
+      this.userForm.get('email')!.enable();
+      this.userForm.get('role')!.enable();
+      this.userForm.get('totalInvestido')!.enable();
     }
     this.isPanelOpen = true;
   }
@@ -262,10 +270,12 @@ export class ClientsComponent implements OnInit {
   saveUser(): void {
     if (this.userForm.invalid) return;
 
+    // .value ignora controles desabilitados: na edição vira só { name },
+    // que é o que o UpdateClientDto da API aceita.
     const formValue = this.userForm.value;
 
     const saveObservable = this.currentUserId
-      ? this.clientsService.updateClient(this.currentUserId, formValue)
+      ? this.clientsService.updateClient(this.currentUserId, { name: formValue.name })
       : this.clientsService.createClient(formValue);
 
     saveObservable.subscribe(() => {

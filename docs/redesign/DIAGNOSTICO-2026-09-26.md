@@ -1,6 +1,6 @@
 # Diagnóstico e direção do redesign (26/09/2026)
 
-Origem: análise feita em 26/09/2026 a partir do código do `valle-consultoria` e do `valle-api`, com o front rodando localmente sobre uma API simulada (ver [tools/README.md](tools/README.md)). Este texto deu origem à apresentação `Proposta-Redesign-Valle.pptx` e foi detalhado em tarefas no [PLANO-IMPLEMENTACAO.md](../../PLANO-IMPLEMENTACAO.md).
+Origem: análise feita em 26/09/2026 a partir do código do `valle-consultoria` e do `valle-api`, hoje continuados como `valle-invest-front` e `valle-invest-api`, com o front rodando localmente sobre uma API simulada (ver [tools/README.md](tools/README.md)). Este texto deu origem à apresentação `Proposta-Redesign-Valle.pptx` e foi detalhado em tarefas no [PLANO-IMPLEMENTACAO.md](../../PLANO-IMPLEMENTACAO.md).
 
 O plano de implementação é a referência atual. Este documento fica como registro do diagnóstico original e dos pontos de UX que o plano cita de forma resumida.
 

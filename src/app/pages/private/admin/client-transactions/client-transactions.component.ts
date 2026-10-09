@@ -608,60 +608,32 @@ export class ClientTransactionsComponent implements OnInit {
     if (this.transactionForm.invalid) return;
     const formValue = this.transactionForm.value;
 
+    // A API só aceita os campos do DTO (data, clientId, tipo, valor).
+    // O status é definido pelo endpoint: POST entra como Aprovado.
     const saveObservable = this.currentTransactionId
       ? this.clientTransactionsService.updateClientTransaction(
           this.currentTransactionId,
-          {
-            ...formValue,
-            status: this.currentTransaction?.status || 'Pendente',
-          }
+          formValue
         )
-      : this.clientTransactionsService.createClientTransaction({
-          ...formValue,
-          status: 'Pendente',
-        });
+      : this.clientTransactionsService.createClientTransaction(formValue);
     saveObservable.subscribe(() => this.refresh$.next());
     this.closePanel();
   }
 
+  /**
+   * Aprovar ou negar só muda o status. O saldo do cliente é recalculado
+   * pela API dentro da mesma transação do Firestore.
+   */
   processRequest(
     transaction: IClientTransaction,
     status: 'Aprovado' | 'Negado'
   ): void {
-    if (status === 'Aprovado') {
-      this.clientsService
-        .getClientById(transaction.clientId)
-        .pipe(
-          switchMap((client) => {
-            const currentBalance = client.totalInvestido || 0;
-            const newBalance =
-              transaction.tipo === 'Aporte'
-                ? currentBalance + transaction.valor
-                : currentBalance - transaction.valor;
-
-            const updateUser$ = this.clientsService.updateClient(client.id, {
-              totalInvestido: newBalance,
-            });
-            const updateTransaction$ =
-              this.clientTransactionsService.updateClientTransaction(
-                transaction.id,
-                { status }
-              );
-
-            return forkJoin([updateUser$, updateTransaction$]);
-          })
-        )
-        .subscribe({
-          next: () => this.refresh$.next(),
-          error: (err) => console.error('Erro ao aprovar a transação', err),
-        });
-    } else {
-      this.clientTransactionsService
-        .updateClientTransaction(transaction.id, { status })
-        .subscribe(() => {
-          this.refresh$.next();
-        });
-    }
+    this.clientTransactionsService
+      .updateClientTransaction(transaction.id, { status })
+      .subscribe({
+        next: () => this.refresh$.next(),
+        error: (err) => console.error('Erro ao processar a transação', err),
+      });
   }
   deleteTransaction(transaction: IClientTransaction): void {
     if (!transaction || !transaction.id) {

@@ -491,13 +491,13 @@ export class ClientDashboardComponent implements OnDestroy {
     if (!currentUser) return;
     const clientId = currentUser.id; // Cliente só pode fazer para si mesmo
     if (!clientId) return;
+    // Só os campos do DTO da API. clientName e status são definidos lá:
+    // a solicitação sai sempre em nome do usuário autenticado, como Pendente.
     const requestData: Partial<IClientTransaction> = {
         clientId: clientId,
-        clientName: currentUser.name,
         tipo: this.panelTitle.includes('Aporte') ? 'Aporte' : 'Resgate',
         valor: this.requestForm.value.valor,
         data: new Date().toISOString(),
-        status: 'Pendente'
     };
     this.clientTransactionsService.createRequest(requestData).subscribe({
         next: () => this.closePanel(),
