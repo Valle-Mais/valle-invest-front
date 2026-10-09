@@ -12,7 +12,9 @@ export interface IUser {
   status: 'Ativo' | 'Inativo';
   role: 'admin' | 'client';
   totalInvestido: number;
- participationPercent?: number; // Novo campo para a porcentagem da carteira
+  participationPercent?: number;
+  /** true enquanto o usuário não definiu senha (convite pendente). */
+  mustSetPassword?: boolean;
 }
 
 @Injectable({

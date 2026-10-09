@@ -15,6 +15,9 @@ const CLIENT = token('c1', 'client');
 const shots = [
   { name: 'login-desktop', url: '/login', w: 1440, h: 900 },
   { name: 'login-mobile', url: '/login', w: 390, h: 844, mobile: true },
+  { name: 'esqueci-senha', url: '/esqueci-senha', w: 1440, h: 900 },
+  { name: 'definir-senha', url: '/definir-senha?token=mock', w: 1440, h: 900 },
+  { name: 'client-alterar-senha', url: '/sistema/alterar-senha', w: 1440, h: 900, tok: CLIENT },
   { name: 'admin-dashboard', url: '/admin/dashboard', w: 1440, h: 900, tok: ADMIN },
   { name: 'admin-dashboard-dark', url: '/admin/dashboard', w: 1440, h: 900, tok: ADMIN, dark: true },
   { name: 'admin-client-view', url: '/admin/client-view', w: 1440, h: 900, tok: ADMIN },

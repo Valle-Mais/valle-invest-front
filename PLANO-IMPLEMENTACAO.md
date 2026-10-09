@@ -66,12 +66,12 @@ Base: diagnóstico do código feito em 05/10/2026 e a apresentação `Proposta-R
 
 | # | Bug | Onde | Efeito |
 |---|---|---|---|
-| B1 | Login redireciona cliente logado para `/client/dashboard`; a rota real é `/sistema/dashboard` | `pages/public/login/login.component.ts:37` | Cliente já logado cai na rota curinga e volta para `/` |
+| B1 | Login redireciona cliente logado para `/client/dashboard`; a rota real é `/sistema/dashboard`. **Corrigido na Fase 1** (`guestGuard` + `AuthService.homeFor`) | `pages/public/login/login.component.ts:37` | Cliente já logado cai na rota curinga e volta para `/` |
 | B2 | Botão de pendências no dashboard admin navega para `/admin/operacoes`, rota inexistente | `pages/private/admin/dashboard/dashboard.component.ts:298` | Link morto na ação principal do admin |
 | B3 | Saldo do extrato invertido: API devolve desc, componente inverte para asc e começa o saldo no total atual | `pages/private/client/statement/statement.component.ts:149-168` | Lançamento mais antigo mostra o saldo de hoje; o mais recente, o menor |
 | B4 | Admin na Visão do Cliente vê os botões Solicitar Aporte/Resgate e a solicitação sai com `clientId` do admin | `pages/private/client/dashboard/dashboard.component.ts:179-202, 488-506` | Pedido criado em nome errado |
 | B5 | Aprovação faz `PATCH /clients/:id` com `totalInvestido` em paralelo ao `PATCH` da transação; a API já recalcula o saldo em transação Firestore | `pages/private/admin/client-transactions/client-transactions.component.ts:631-651` | Redundante e com corrida: pode sobrescrever o saldo calculado pela API |
-| B6 | Dois `AuthService` com estado duplicado | `src/app/security/` e `src/app/services/` | Sessão inconsistente entre telas |
+| B6 | Dois `AuthService` com estado duplicado. **Corrigido na Fase 1**: serviço único em `src/app/core/auth/`, os dois arquivos antigos viraram re-exports | `src/app/security/` e `src/app/services/` | Sessão inconsistente entre telas |
 | B7 | API sem guard em quase todos os endpoints; registro público com escolha de role | `valle-invest-api/src/*/*.controller.ts`, `auth.controller.ts:15` | Qualquer pessoa cria admin e lê dados de todos |
 | B8 | `PATCH /clients/:id` aceita `role` e `totalInvestido` | `valle-invest-api/src/clients/dto/update-client.dto.ts` | Escalada de privilégio e corrupção de saldo |
 | B9 | Rateio e reprocessamento calculam o saldo de cada cliente com todas as transações aprovadas, sem cortar pela data da operação | `valle-invest-api/src/fund-operations/fund-operations.service.ts` (`distributeResultInTransaction` e `reprocessOperationsFrom`) | Cliente cadastrado depois de uma operação recebe parte do resultado dela e a rentabilidade dos clientes antigos é reescrita. Detalhes na Fase 1.5 |
@@ -151,6 +151,8 @@ Estimativa: 4 a 5 dias.
 ---
 
 ## 5. Fase 1: Login com senha
+
+**Status (09/10/2026): código implementado nos dois repositórios, sem commit.** API: `MailModule`, `AuthTokensService` (coleção `authTokens` com SHA-256), bcrypt, DTOs, todos os endpoints da seção 5.2, convite automático em `POST /clients`, `passwordHash` fora de toda resposta, task `seed -- --task=invite-all`, 24 testes passando. Front: `AuthService` único em `core/auth` (B6 resolvido), `guestGuard`, telas de login, esqueci-senha, definir-senha e alterar-senha, redirect por papel (B1 resolvido), botão de reenvio de convite na tela de clientes, mock atualizado. Pendências: `FRONTEND_URL` em produção apontando para o front publicado; verificar domínio no Resend e definir `MAIL_FROM`; rodar `invite-all` no cutover; **nesta fase a API sobe antes do front** (as rotas novas são aditivas e o magic link continua funcionando para o front antigo, mas o front novo depende de `GET /auth/me` e `POST /auth/login`).
 
 Objetivo: substituir o magic link por email e senha, com primeiro acesso, recuperação e troca de senha. Nenhum usuário existente tem senha, então o primeiro acesso é parte do fluxo, não exceção.
 

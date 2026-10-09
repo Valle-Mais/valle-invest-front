@@ -21,13 +21,12 @@ Não há ESLint configurado; o `ng build` com TypeScript estrito é a verificaç
 
 - Angular 19 standalone, Tailwind v4 (`@theme` em `src/styles.css`; `tailwind.config.js` é ignorado pelo v4), ApexCharts via `ng-apexcharts` **fixado em 1.15.0** (1.16+ exige Angular 20; não subir sem migrar o Angular).
 - Rotas: `src/app/app.routes.ts` carrega `pages/private/admin/admin.routes.ts` (prefixo `/admin`) e `pages/private/client/client.routes.ts` (prefixo `/sistema`), ambas com `authGuard` e `roleGuard` de `src/app/security/`.
-- Telas ativas: admin (dashboard, client-view, clients, fund-operations, client-transactions), cliente (dashboard, statement), públicas (login, verify-login). O resto de `pages/` é código morto listado no plano; não estender, remover na fase prevista.
+- Telas ativas: admin (dashboard, client-view, clients, fund-operations, client-transactions, alterar-senha), cliente (dashboard, statement, alterar-senha), públicas (login, esqueci-senha, definir-senha, verify-login). O resto de `pages/` é código morto listado no plano; não estender, remover na fase prevista.
 - Serviços HTTP em `src/app/services/`, um por recurso da API, usando `environment.apiUrl`.
-- `src/app/core/auth/auth.interceptor.ts` injeta o `Bearer` do `localStorage` (`access_token`) em toda chamada para `environment.apiUrl` e encerra a sessão em 401, exceto em `/auth/*`.
+- Autenticação em `src/app/core/auth/`: `auth.service.ts` é o único serviço de sessão (login com senha, esqueci/definir senha, troca de senha, reenvio de convite, magic link de transição, `currentUser` como signal e `currentUser$` para o legado); `auth.interceptor.ts` injeta o `Bearer` e encerra a sessão em 401, exceto em `/auth/*`; `guest.guard.ts` manda usuário logado para a área dele; `password-policy.ts` espelha a política da API.
+- `src/app/security/auth.service.ts` e `src/app/services/auth.service.ts` são só re-exports do serviço de `core/auth`, mantidos para o legado. Código novo importa de `core/auth`.
 
 ### Dívidas que o código novo não deve repetir
-
-- Existem dois `AuthService`: `src/app/security/auth.service.ts` (guards e login) e `src/app/services/auth.service.ts` (`currentUser$`). Serão unificados na Fase 1. Até lá, não criar um terceiro nem espalhar mais chamadas; preferir o de `security/` para sessão e o de `services/` para `currentUser$`.
 - Estilo inline com classes Tailwind em todos os templates, sem componentes compartilhados. A Fase 2 cria `src/app/ui/` com os componentes base. Enquanto ela não existe, não criar componentes "temporários" fora dessa pasta.
 - 12 componentes têm template inline no `.ts`. Código novo usa `templateUrl`.
 - Conversões de `_seconds`/`toDate` espalhadas. A API vai devolver ISO; não adicionar mais conversões no front.

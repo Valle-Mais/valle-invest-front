@@ -51,7 +51,14 @@ import { AuthService } from '../../../../services/auth.service';
         </nav>
 
         <!-- Rodapé -->
-        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+          <a routerLink="alterar-senha" routerLinkActive="bg-emerald-600 text-white shadow-md"
+             class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            <span>Alterar senha</span>
+          </a>
           <button (click)="logout()"
                   class="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors duration-200">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -95,7 +102,7 @@ export class ClientAreaLayoutComponent {
   private currentUser;
 
   userName = computed(() => this.currentUser()?.name || 'Cliente');
-  userRole = computed(() => this.currentUser()?.role || 'client');
+  userRole = computed(() => (this.currentUser()?.role === 'admin' ? 'Administrador' : 'Cliente'));
   userInitials = computed(() => {
     const name = this.currentUser()?.name || 'Cliente';
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
@@ -110,6 +117,5 @@ export class ClientAreaLayoutComponent {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

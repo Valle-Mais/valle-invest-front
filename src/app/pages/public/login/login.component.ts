@@ -1,64 +1,64 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-import { AuthService } from '../../../security/auth.service'; // Importar o AuthService
+import { RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { AuthService, MUST_SET_PASSWORD } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, HttpClientModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './login.component.html',
 })
-export class LoginPageComponent implements OnInit {
-  private http = inject(HttpClient);
-  private authService = inject(AuthService); // Injetar o AuthService
-  private router = inject(Router);       // Injetar o Router
+export class LoginPageComponent {
+  private readonly auth = inject(AuthService);
 
   email = '';
-  linkSent = signal(false);
-  isLoading = signal(false);
-  errorMessage: string | null = null;
+  password = '';
 
-  private apiUrl = `${environment.apiUrl}/auth/request-link`;
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+  /** Usuário existe mas ainda não definiu senha: oferece o envio do link. */
+  readonly mustSetPassword = signal(false);
+  readonly linkSent = signal(false);
 
-  ngOnInit(): void {
-    // **LÓGICA DE REDIRECIONAMENTO ADICIONADA AQUI**
-    // Verifica se o utilizador já está logado quando o componente é inicializado.
-    if (this.authService.isLoggedIn()) {
-      const userRole = this.authService.getUserRole();
-
-      // Redireciona com base na função do utilizador.
-      if (userRole === 'admin') {
-        this.router.navigate(['/admin/dashboard']);
-      } else {
-        this.router.navigate(['/client/dashboard']);
-      }
-    }
-  }
-
-  requestLink(): void {
-    if (!this.email) return;
+  submit(): void {
+    if (!this.email || !this.password || this.isLoading()) return;
 
     this.isLoading.set(true);
-    this.errorMessage = null;
+    this.errorMessage.set(null);
+    this.mustSetPassword.set(false);
 
-    const payload = {
-      email: this.email,
-      origin: window.location.origin
-    };
-
-    this.http.post(this.apiUrl, payload).subscribe({
-      next: () => {
-        this.linkSent.set(true);
+    this.auth.login(this.email.trim(), this.password).subscribe({
+      next: () => this.auth.redirectHome(),
+      error: (err: HttpErrorResponse) => {
         this.isLoading.set(false);
+        if (err.status === 403 && err.error?.code === MUST_SET_PASSWORD) {
+          this.mustSetPassword.set(true);
+          return;
+        }
+        if (err.status === 429) {
+          this.errorMessage.set('Muitas tentativas. Aguarde um minuto e tente de novo.');
+          return;
+        }
+        this.errorMessage.set(err.error?.message || 'Não foi possível entrar. Tente novamente.');
       },
-      error: (err) => {
-        this.errorMessage = err.error.message || 'Ocorreu um erro. Tente novamente.';
+    });
+  }
+
+  /** Envia o link para definir a senha (primeiro acesso ou convite perdido). */
+  sendSetPasswordLink(): void {
+    if (!this.email || this.isLoading()) return;
+    this.isLoading.set(true);
+    this.auth.forgotPassword(this.email.trim()).subscribe({
+      next: () => {
         this.isLoading.set(false);
-      }
+        this.linkSent.set(true);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(err.error?.message || 'Não foi possível enviar o link. Tente novamente.');
+      },
     });
   }
 }

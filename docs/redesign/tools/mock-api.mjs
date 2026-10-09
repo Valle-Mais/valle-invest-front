@@ -100,10 +100,31 @@ http.createServer((req, res) => {
   req.on('data', c => body += c);
   req.on('end', () => {
     console.log(req.method, p, url.search);
+    const session = (user) => ({ access_token: jwt({ sub: user.id, role: user.role, email: user.email, exp: Math.floor(Date.now() / 1000) + 86400 }), user });
+    const bearerUser = () => {
+      try {
+        const payload = JSON.parse(Buffer.from((req.headers.authorization || '').split('.')[1] || '', 'base64').toString() || '{}');
+        return users.find(u => u.id === payload.sub);
+      } catch { return undefined; }
+    };
+
+    // Login com senha: qualquer senha vale; o email escolhe o usuário (default: cliente c1).
+    if (p === '/auth/login' && req.method === 'POST') {
+      const { email } = JSON.parse(body || '{}');
+      const user = users.find(u => u.email === email) || users[1];
+      return json(res, 200, session(user));
+    }
+    if (p === '/auth/me' && req.method === 'GET') {
+      const user = bearerUser();
+      return user ? json(res, 200, user) : json(res, 401, { message: 'Unauthorized' });
+    }
+    if (['/auth/forgot-password', '/auth/reset-password', '/auth/invite/resend'].includes(p) && req.method === 'POST') {
+      return json(res, 200, { message: 'ok (mock)' });
+    }
+    if (p === '/auth/password' && req.method === 'PATCH') return json(res, 200, { message: 'Senha alterada com sucesso.' });
     if (p === '/auth/verify-token' && req.method === 'POST') {
       const { token } = JSON.parse(body || '{}');
-      const user = token === 'admin' ? users[0] : users[1];
-      return json(res, 200, { access_token: jwt({ sub: user.id, role: user.role, email: user.email, exp: Math.floor(Date.now() / 1000) + 86400 }), user });
+      return json(res, 200, session(token === 'admin' ? users[0] : users[1]));
     }
     if (p === '/clients' && req.method === 'GET') return json(res, 200, users);
     if (p.startsWith('/clients/') && req.method === 'GET') {

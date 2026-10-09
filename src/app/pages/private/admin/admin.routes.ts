@@ -8,6 +8,14 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
+        path: 'alterar-senha',
+        title: 'Alterar senha',
+        loadComponent: () =>
+          import('../change-password/change-password.component').then(
+            (m) => m.ChangePasswordComponent
+          ),
+      },
+      {
         path: 'dashboard',
         title: 'Dashboard',
         loadComponent: () =>

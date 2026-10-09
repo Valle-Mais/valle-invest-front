@@ -1,9 +1,10 @@
 // Arquivo: src/app/pages/private/admin/clients/clients.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BehaviorSubject, combineLatest, map, startWith, Observable, switchMap } from 'rxjs';
-import { IUser, ClientsService } from '../../../../services/clients.service'; // Importa o serviço real
+import { IUser, ClientsService } from '../../../../services/clients.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-clients',
@@ -35,6 +36,13 @@ import { IUser, ClientsService } from '../../../../services/clients.service'; //
             <p class="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{{ metrics.clientesAtivos }}</p>
           </div>
       </section>
+
+      @if (feedback(); as msg) {
+        <div class="p-3 text-sm rounded-lg"
+             [ngClass]="msg.ok ? 'text-green-800 bg-green-100 dark:bg-green-900/30 dark:text-green-300' : 'text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400'">
+          {{ msg.text }}
+        </div>
+      }
 
       <!-- Tabela de Clientes -->
       <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
@@ -69,6 +77,11 @@ import { IUser, ClientsService } from '../../../../services/clients.service'; //
                            }">
                           {{ user.role === 'admin' ? 'Admin' : 'Cliente' }}
                         </span>
+                        @if (user.mustSetPassword) {
+                          <span class="mt-1 ml-1 inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" title="Ainda não definiu senha">
+                            Convite pendente
+                          </span>
+                        }
                       </div>
                     </div>
                   </td>
@@ -85,6 +98,9 @@ import { IUser, ClientsService } from '../../../../services/clients.service'; //
                   </td>
                   <td class="px-6 py-4">
                     <div class="flex justify-end items-center gap-2">
+                      <button (click)="resendInvite(user)" [disabled]="invitingId() === user.id" class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors disabled:opacity-50" title="Reenviar convite para definir senha">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                      </button>
                       <button (click)="openPanel(user)" class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors" title="Editar Usuário">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
                       </button>
@@ -156,6 +172,27 @@ import { IUser, ClientsService } from '../../../../services/clients.service'; //
 })
 export class ClientsComponent implements OnInit {
   private refresh$ = new BehaviorSubject<void>(undefined);
+  private readonly auth = inject(AuthService);
+
+  /** Mensagem de resultado das ações da tela (reenvio de convite). */
+  readonly feedback = signal<{ ok: boolean; text: string } | null>(null);
+  readonly invitingId = signal<string | null>(null);
+
+  resendInvite(user: IUser): void {
+    this.invitingId.set(user.id);
+    this.feedback.set(null);
+    this.auth.resendInvite(user.id).subscribe({
+      next: () => {
+        this.invitingId.set(null);
+        this.feedback.set({ ok: true, text: `Convite reenviado para ${user.email}.` });
+        this.refresh$.next();
+      },
+      error: (err) => {
+        this.invitingId.set(null);
+        this.feedback.set({ ok: false, text: err.error?.message || 'Não foi possível reenviar o convite.' });
+      },
+    });
+  }
 
   // Observables para a UI
   allUsers$: Observable<IUser[]>;
