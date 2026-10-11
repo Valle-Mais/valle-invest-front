@@ -11,7 +11,7 @@ export class ThemeService {
   // 1. Usa um 'signal' do Angular para guardar o tema atual. O valor inicial é determinado no construtor.
   theme = signal<Theme>('light');
 
-  // Injeta o PLATFORM_ID para verificar se o código está a ser executado no navegador.
+  // Injeta o PLATFORM_ID para verificar se o código está rodando no navegador.
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     // 2. A lógica de inicialização é movida para o construtor para ser executada assim que o serviço é criado.
     if (isPlatformBrowser(this.platformId)) {
@@ -21,7 +21,7 @@ export class ThemeService {
         // Se houver um tema guardado, usa-o.
         this.theme.set(savedTheme);
       } else {
-        // Caso contrário, verifica a preferência do sistema operativo do utilizador.
+        // Caso contrário, verifica a preferência do sistema operacional do usuário.
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         this.theme.set(prefersDark ? 'dark' : 'light');
       }

@@ -13,15 +13,15 @@ export const roleGuard: CanActivateFn = (
 
   // Obtém o papel esperado da configuração da rota (ex: data: { expectedRole: 'admin' })
   const expectedRole = route.data['expectedRole'];
-  // Obtém o papel atual do utilizador a partir do token JWT
+  // Obtém o papel atual do usuário a partir do token JWT
   const userRole = authService.getUserRole();
 
-  // Verifica se o utilizador está logado e se o seu papel corresponde ao esperado.
+  // Verifica se o usuário está logado e se o papel corresponde ao esperado.
   if (authService.isLoggedIn() && userRole === expectedRole) {
     return true; // Permite o acesso.
   }
 
-  // Se o utilizador estiver logado mas não tiver o papel correto,
+  // Se o usuário estiver logado mas não tiver o papel correto,
   // podemos redirecioná-lo para o seu próprio dashboard para evitar confusão.
   if (authService.isLoggedIn()) {
     if (userRole === 'admin') {

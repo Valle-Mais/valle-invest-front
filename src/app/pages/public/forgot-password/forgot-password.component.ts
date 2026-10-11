@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/auth/auth.service';
+import { VlButtonComponent, VlFieldComponent, VlInputDirective, VlLogoComponent } from '../../../ui';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, VlButtonComponent, VlFieldComponent, VlInputDirective, VlLogoComponent],
   templateUrl: './forgot-password.component.html',
 })
 export class ForgotPasswordComponent {

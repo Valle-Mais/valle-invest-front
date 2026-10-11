@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PASSWORD_POLICY_MESSAGE, isPasswordValid } from '../../../core/auth/password-policy';
+import { VlButtonComponent, VlFieldComponent, VlInputDirective, VlLogoComponent } from '../../../ui';
 
 /**
  * Define a senha a partir de um link por email. Serve para o primeiro acesso
@@ -12,7 +13,7 @@ import { PASSWORD_POLICY_MESSAGE, isPasswordValid } from '../../../core/auth/pas
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, VlButtonComponent, VlFieldComponent, VlInputDirective, VlLogoComponent],
   templateUrl: './reset-password.component.html',
 })
 export class ResetPasswordComponent {

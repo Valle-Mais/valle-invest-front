@@ -2,13 +2,130 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-script: Great Vibes, cursive;
-  --color-sv-green: #1e462e;
-  --color-sv-green-light: #2a553a;
-  --color-sv-gold: #c7a84c;
-  --color-sv-gold-dark: #b3913b;
-  --color-sv-cream: #f0ead6;
+/*
+ * Design system Valle: tokens semânticos.
+ *
+ * Os valores vivem em variáveis CSS (:root e .dark) e o @theme inline os expõe
+ * como utilitários do Tailwind (bg-surface, text-text-muted, border-border...).
+ * Como são variáveis, a troca de tema acontece sem gerar classes dark: duplicadas.
+ *
+ * Regra: código novo usa só os tokens semânticos. A paleta padrão do Tailwind
+ * (slate, emerald...) fica para o legado até cada tela ser migrada.
+ * Documentação em src/design-system/README.md.
+ */
+:root {
+  color-scheme: light;
+
+  /* Marca */
+  --vl-primary: #1e462e;
+  --vl-primary-strong: #163522;
+  --vl-primary-soft: #e3ece6;
+  --vl-on-primary: #ffffff;
+  --vl-accent: #c7a84c;
+  --vl-accent-strong: #8f7222;
+  --vl-accent-soft: #f3ead2;
+
+  /* Superfícies e texto */
+  --vl-surface: #f1efe8;
+  --vl-surface-raised: #ffffff;
+  --vl-surface-alt: #ebe6d6;
+  --vl-text: #16211b;
+  --vl-text-muted: #596270;
+  --vl-border: #d8d3c4;
+  --vl-ring: #c7a84c;
+
+  /* Semântica financeira e de estado */
+  --vl-positive: #15803d;
+  --vl-positive-soft: #dcfce7;
+  --vl-negative: #b91c1c;
+  --vl-negative-soft: #fee2e2;
+  --vl-warning: #9a4a07;
+  --vl-warning-soft: #fdecc8;
+  --vl-info: #1d4ed8;
+  --vl-info-soft: #dbeafe;
 }
 
+.dark {
+  color-scheme: dark;
 
+  --vl-primary: #3f7f58;
+  --vl-primary-strong: #2f6444;
+  --vl-primary-soft: #16281d;
+  --vl-on-primary: #ffffff;
+  --vl-accent: #d4b86a;
+  --vl-accent-strong: #c7a84c;
+  --vl-accent-soft: #2b2612;
+
+  --vl-surface: #0c130f;
+  --vl-surface-raised: #141f18;
+  --vl-surface-alt: #1a2920;
+  --vl-text: #ece9df;
+  --vl-text-muted: #9aaea1;
+  --vl-border: #26382d;
+  --vl-ring: #d4b86a;
+
+  --vl-positive: #4ade80;
+  --vl-positive-soft: #14361f;
+  --vl-negative: #f87171;
+  --vl-negative-soft: #3b1515;
+  --vl-warning: #fbbf24;
+  --vl-warning-soft: #3a2a0a;
+  --vl-info: #60a5fa;
+  --vl-info-soft: #122444;
+}
+
+@theme inline {
+  /* Tipografia: uma família só (Inter), com números tabulares nos valores */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --color-primary: var(--vl-primary);
+  --color-primary-strong: var(--vl-primary-strong);
+  --color-primary-soft: var(--vl-primary-soft);
+  --color-on-primary: var(--vl-on-primary);
+  --color-accent: var(--vl-accent);
+  --color-accent-strong: var(--vl-accent-strong);
+  --color-accent-soft: var(--vl-accent-soft);
+
+  --color-surface: var(--vl-surface);
+  --color-surface-raised: var(--vl-surface-raised);
+  --color-surface-alt: var(--vl-surface-alt);
+  --color-text: var(--vl-text);
+  --color-text-muted: var(--vl-text-muted);
+  --color-border: var(--vl-border);
+  --color-ring: var(--vl-ring);
+
+  --color-positive: var(--vl-positive);
+  --color-positive-soft: var(--vl-positive-soft);
+  --color-negative: var(--vl-negative);
+  --color-negative-soft: var(--vl-negative-soft);
+  --color-warning: var(--vl-warning);
+  --color-warning-soft: var(--vl-warning-soft);
+  --color-info: var(--vl-info);
+  --color-info-soft: var(--vl-info-soft);
+
+  /* Aliases legados (sv-*), usados pelas telas ainda não migradas. Não usar em código novo. */
+  --color-sv-green: var(--vl-primary);
+  --color-sv-green-light: var(--vl-primary-strong);
+  --color-sv-gold: var(--vl-accent);
+  --color-sv-gold-dark: var(--vl-accent-strong);
+  --color-sv-cream: var(--vl-surface-alt);
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-text font-sans antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply tracking-tight;
+  }
+
+  /* Valores financeiros alinham por dígito */
+  .num {
+    @apply tabular-nums;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-surface;
+  }
+}

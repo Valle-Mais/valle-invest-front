@@ -3,16 +3,18 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PASSWORD_POLICY_MESSAGE, isPasswordValid } from '../../../core/auth/password-policy';
+import { ToastService, VlButtonComponent, VlFieldComponent, VlInputDirective, VlPageHeaderComponent } from '../../../ui';
 
 /** Troca de senha do usuário logado. Usada nas áreas de admin e de cliente. */
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, VlButtonComponent, VlFieldComponent, VlInputDirective, VlPageHeaderComponent],
   templateUrl: './change-password.component.html',
 })
 export class ChangePasswordComponent {
   private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
 
   readonly policyMessage = PASSWORD_POLICY_MESSAGE;
 
@@ -47,6 +49,7 @@ export class ChangePasswordComponent {
       next: (res) => {
         this.isLoading.set(false);
         this.successMessage.set(res.message || 'Senha alterada com sucesso.');
+        this.toast.success(res.message || 'Senha alterada com sucesso.');
         this.currentPassword = '';
         this.newPassword = '';
         this.confirm = '';

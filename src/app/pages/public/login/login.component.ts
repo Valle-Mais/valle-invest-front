@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, MUST_SET_PASSWORD } from '../../../core/auth/auth.service';
+import { VlButtonComponent, VlFieldComponent, VlInputDirective, VlLogoComponent } from '../../../ui';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, VlButtonComponent, VlFieldComponent, VlInputDirective, VlLogoComponent],
   templateUrl: './login.component.html',
 })
 export class LoginPageComponent {

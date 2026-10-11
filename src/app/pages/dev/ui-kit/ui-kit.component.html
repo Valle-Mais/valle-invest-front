@@ -1,0 +1,158 @@
+<div class="mx-auto max-w-[1280px] p-6 sm:p-8 space-y-12 bg-surface min-h-screen text-text">
+  <vl-page-header title="Design system Valle" subtitle="Vitrine dos componentes base. Só em desenvolvimento.">
+    <vl-period-selector actions [(value)]="period" />
+    <button vl-button actions (click)="drawerOpen.set(true)"><lucide-icon name="plus" [size]="16" />Abrir drawer</button>
+  </vl-page-header>
+
+  <!-- Marca -->
+  <section class="space-y-4">
+    <h2 class="text-xl font-bold">Marca</h2>
+    <div class="flex flex-wrap items-center gap-8">
+      <vl-logo [size]="32" />
+      <vl-logo variant="horizontal" [size]="32" />
+      <vl-logo variant="horizontal" [size]="24" />
+      <img src="favicon.svg" alt="favicon" class="h-8 w-8" />
+      <div class="rounded-xl bg-primary px-6 py-4 flex items-center gap-8">
+        <vl-logo [size]="32" [onDark]="true" />
+        <vl-logo variant="horizontal" [size]="32" [onDark]="true" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Tokens -->
+  <section class="space-y-4">
+    <h2 class="text-xl font-bold">Cores</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 text-xs">
+      <div class="rounded-lg p-4 bg-primary text-on-primary">primary</div>
+      <div class="rounded-lg p-4 bg-primary-strong text-on-primary">primary-strong</div>
+      <div class="rounded-lg p-4 bg-primary-soft text-primary">primary-soft</div>
+      <div class="rounded-lg p-4 bg-accent text-primary-strong">accent</div>
+      <div class="rounded-lg p-4 bg-accent-soft text-accent-strong">accent-soft</div>
+      <div class="rounded-lg p-4 bg-surface-alt text-text border border-border">surface-alt</div>
+      <div class="rounded-lg p-4 bg-surface-raised text-text border border-border">surface-raised</div>
+      <div class="rounded-lg p-4 bg-positive-soft text-positive">positive</div>
+      <div class="rounded-lg p-4 bg-negative-soft text-negative">negative</div>
+      <div class="rounded-lg p-4 bg-warning-soft text-warning">warning</div>
+      <div class="rounded-lg p-4 bg-info-soft text-info">info</div>
+      <div class="rounded-lg p-4 bg-surface text-text-muted border border-border">text-muted</div>
+    </div>
+    <p class="text-sm text-text-muted">Período selecionado: <strong class="text-text">{{ period() }}</strong>. Alterne o tema pela área logada para ver o modo escuro.</p>
+  </section>
+
+  <!-- Tipografia -->
+  <section class="space-y-3">
+    <h2 class="text-xl font-bold">Tipografia</h2>
+    <h1 class="text-3xl font-bold">Título de página</h1>
+    <h3 class="text-lg font-bold">Título de seção</h3>
+    <p class="text-base">Tudo em Inter, inclusive títulos. <span class="num font-semibold">R$ 248.310,55</span> com números tabulares.</p>
+    <p class="text-sm text-text-muted">Texto de apoio.</p>
+  </section>
+
+  <!-- KPIs -->
+  <section class="space-y-4">
+    <h2 class="text-xl font-bold">KPI cards</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <vl-kpi-card class="lg:col-span-1" label="Patrimônio atual" value="R$ 248.310,55" delta="+R$ 38.310,55 · +24,2%" deltaLabel="desde o início" [hero]="true" icon="wallet" />
+      <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <vl-kpi-card label="Rentabilidade" value="24,2%" tone="positive" icon="trending-up" />
+        <vl-kpi-card label="vs CDI" value="111%" tone="positive" />
+        <vl-kpi-card label="vs Ibovespa" value="-4,1%" tone="negative" icon="trending-down" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Botões e badges -->
+  <section class="space-y-4">
+    <h2 class="text-xl font-bold">Botões</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <button vl-button>Primário</button>
+      <button vl-button variant="secondary">Secundário</button>
+      <button vl-button variant="ghost">Ghost</button>
+      <button vl-button variant="danger"><lucide-icon name="trash-2" [size]="16" />Excluir</button>
+      <button vl-button size="sm">Pequeno</button>
+      <button vl-button size="lg">Grande</button>
+      <button vl-button [loading]="true">Salvando</button>
+      <button vl-button [disabled]="true">Desabilitado</button>
+    </div>
+    <h2 class="text-xl font-bold">Badges</h2>
+    <div class="flex flex-wrap gap-2">
+      <vl-badge>Neutro</vl-badge>
+      <vl-badge tone="positive">Aprovado</vl-badge>
+      <vl-badge tone="negative">Negado</vl-badge>
+      <vl-badge tone="warning">Pendente</vl-badge>
+      <vl-badge tone="info">Informação</vl-badge>
+      <vl-badge tone="accent">Rendimento</vl-badge>
+    </div>
+  </section>
+
+  <!-- Formulário -->
+  <section class="space-y-4 max-w-md">
+    <h2 class="text-xl font-bold">Campos</h2>
+    <vl-field label="Email" inputId="demo-email" hint="Usamos só para o login." [required]="true">
+      <input vlInput id="demo-email" type="email" [(ngModel)]="email" placeholder="seu.email@exemplo.com" />
+    </vl-field>
+    <vl-field label="Com erro" inputId="demo-err" error="Informe um valor maior que zero.">
+      <input vlInput id="demo-err" type="number" [invalid]="true" value="0" />
+    </vl-field>
+    <vl-field label="Select" inputId="demo-sel">
+      <select vlInput id="demo-sel">
+        <option>Aporte</option>
+        <option>Resgate</option>
+      </select>
+    </vl-field>
+  </section>
+
+  <!-- Feedback -->
+  <section class="space-y-4">
+    <h2 class="text-xl font-bold">Feedback</h2>
+    <div class="flex flex-wrap gap-3">
+      <button vl-button variant="secondary" (click)="showToast('success')">Toast sucesso</button>
+      <button vl-button variant="secondary" (click)="showToast('error')">Toast erro</button>
+      <button vl-button variant="secondary" (click)="showToast('warning')">Toast aviso</button>
+      <button vl-button variant="secondary" (click)="askConfirm(false)">Confirmar</button>
+      <button vl-button variant="danger" (click)="askConfirm(true)">Confirmar destrutivo</button>
+      <button vl-button variant="ghost" (click)="loadingTable.set(!loadingTable())">Alternar carregando</button>
+    </div>
+  </section>
+
+  <!-- Tabela -->
+  <section class="space-y-4">
+    <h2 class="text-xl font-bold">Tabela</h2>
+    <div class="rounded-xl border border-border bg-surface-raised overflow-hidden">
+      <vl-data-table [columns]="columns" [rows]="rows" [loading]="loadingTable()">
+        <ng-template vlCell="tipo" let-row>
+          <vl-badge [tone]="tipoTone(row.tipo)">{{ row.tipo }}</vl-badge>
+        </ng-template>
+        <ng-template vlCell="status" let-row>
+          <vl-badge [tone]="statusTone(row.status)">{{ row.status }}</vl-badge>
+        </ng-template>
+      </vl-data-table>
+      <vl-pagination [page]="page()" [totalPages]="3" (pageChange)="page.set($event)" />
+    </div>
+    <div class="rounded-xl border border-border bg-surface-raised">
+      <vl-empty-state title="Nenhuma transação encontrada" description="Ajuste os filtros ou registre a primeira transação.">
+        <button vl-button size="sm"><lucide-icon name="plus" [size]="16" />Registrar</button>
+      </vl-empty-state>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <vl-skeleton class="h-24" />
+      <vl-skeleton class="h-24" />
+      <vl-skeleton class="h-24" />
+    </div>
+  </section>
+
+  <vl-drawer [(open)]="drawerOpen" title="Registrar transação">
+    <div class="space-y-4">
+      <vl-field label="Cliente" inputId="d-cli">
+        <select vlInput id="d-cli"><option>Maria Fernanda Alves</option><option>Ricardo Souza</option></select>
+      </vl-field>
+      <vl-field label="Valor (R$)" inputId="d-val">
+        <input vlInput id="d-val" type="number" placeholder="0,00" />
+      </vl-field>
+    </div>
+    <div footer class="flex justify-end gap-2">
+      <button vl-button variant="secondary" (click)="drawerOpen.set(false)">Cancelar</button>
+      <button vl-button [loading]="saving()" (click)="fakeSave()">Salvar</button>
+    </div>
+  </vl-drawer>
+</div>

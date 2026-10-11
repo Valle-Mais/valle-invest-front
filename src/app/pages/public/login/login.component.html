@@ -1,66 +1,54 @@
-<div class="flex min-h-screen bg-white dark:bg-gray-900">
-  <div class="hidden lg:flex w-1/2 items-center justify-center bg-sv-green p-12 text-center relative overflow-hidden">
-    <div class="z-10">
-      <h1 class="text-4xl font-serif font-bold text-white mb-4">Acompanhe seus investimentos.</h1>
-      <p class="text-sv-cream/80 max-w-sm mx-auto">Entre com seu email e senha para ver seu patrimônio, rentabilidade e extrato.</p>
+<div class="flex min-h-screen bg-surface">
+  <div class="hidden lg:flex w-1/2 items-center justify-center bg-primary p-12 text-center relative overflow-hidden">
+    <div class="z-10 max-w-md">
+      <vl-logo variant="horizontal" [size]="40" [onDark]="true" class="mb-10" />
+      <h1 class="text-4xl font-bold text-on-primary mb-4">Acompanhe seus investimentos.</h1>
+      <p class="text-on-primary/75">Patrimônio, rentabilidade e extrato, comparados com CDI e Ibovespa, num só lugar.</p>
     </div>
-    <div class="absolute -bottom-24 -right-24 w-72 h-72 border-8 border-sv-gold/10 rounded-full"></div>
-    <div class="absolute -bottom-32 -right-32 w-96 h-96 border-4 border-sv-gold/10 rounded-full"></div>
+    <div class="absolute -bottom-24 -right-24 w-72 h-72 border-8 border-accent/15 rounded-full"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 border-4 border-accent/10 rounded-full"></div>
   </div>
 
   <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
     <div class="w-full max-w-md">
-      <div class="text-center mb-8">
-        <img src="android-chrome-512x512.png" alt="Valle Consultoria" class="mx-auto h-40 w-auto" />
-        <h2 class="mt-4 text-3xl font-bold text-slate-800 dark:text-slate-100">Acesse sua conta</h2>
-        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Informe seu email e senha.</p>
+      <div class="mb-8">
+        <vl-logo variant="horizontal" [size]="32" class="mb-6 lg:hidden" />
+        <h2 class="text-3xl font-bold text-text">Acesse sua conta</h2>
+        <p class="mt-2 text-sm text-text-muted">Informe seu email e senha.</p>
       </div>
 
       @if (linkSent()) {
-        <div class="text-center space-y-4">
-          <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100">Verifique seu email</h3>
-          <p class="text-slate-500 dark:text-slate-400">
-            Se <strong class="text-sv-green dark:text-sv-cream">{{ email }}</strong> estiver cadastrado, enviamos um link para definir sua senha. Ele vale por tempo limitado.
+        <div class="rounded-xl border border-border bg-surface-raised p-6 space-y-2">
+          <h3 class="font-sans text-lg font-bold text-text">Verifique seu email</h3>
+          <p class="text-sm text-text-muted">
+            Se <strong class="text-text">{{ email }}</strong> estiver cadastrado, enviamos um link para definir sua senha. Ele vale por tempo limitado.
           </p>
         </div>
       } @else {
         <form class="space-y-5" (ngSubmit)="submit()">
-          <div>
-            <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-            <input id="email" name="email" type="email" autocomplete="username" required [(ngModel)]="email"
-                   class="mt-1 w-full px-4 py-3 text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-sv-gold"
-                   placeholder="seu.email@exemplo.com" />
-          </div>
+          <vl-field label="Email" inputId="email">
+            <input vlInput id="email" name="email" type="email" autocomplete="username" required [(ngModel)]="email" placeholder="seu.email@exemplo.com" />
+          </vl-field>
 
-          <div>
-            <div class="flex items-center justify-between">
-              <label for="password" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Senha</label>
-              <a routerLink="/esqueci-senha" class="text-sm font-medium text-sv-green hover:underline dark:text-sv-cream">Esqueci minha senha</a>
-            </div>
-            <input id="password" name="password" type="password" autocomplete="current-password" required [(ngModel)]="password"
-                   class="mt-1 w-full px-4 py-3 text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-sv-gold" />
-          </div>
+          <vl-field label="Senha" inputId="password">
+            <input vlInput id="password" name="password" type="password" autocomplete="current-password" required [(ngModel)]="password" />
+            <a routerLink="/esqueci-senha" class="mt-2 inline-block text-sm font-medium text-primary hover:underline">Esqueci minha senha</a>
+          </vl-field>
 
           @if (errorMessage()) {
-            <div class="p-3 text-sm text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-lg text-center">
-              {{ errorMessage() }}
-            </div>
+            <div class="p-3 text-sm rounded-lg bg-negative-soft text-negative" role="alert">{{ errorMessage() }}</div>
           }
 
           @if (mustSetPassword()) {
-            <div class="p-4 text-sm text-amber-800 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-300 rounded-lg space-y-3">
+            <div class="p-4 text-sm rounded-lg bg-warning-soft text-warning space-y-3">
               <p>Você ainda não definiu uma senha. Enviamos um convite por email quando sua conta foi criada; se não o encontrar, peça um novo link.</p>
-              <button type="button" (click)="sendSetPasswordLink()" [disabled]="isLoading()"
-                      class="w-full py-2 px-4 text-sm font-bold rounded-lg text-white bg-sv-green hover:bg-sv-green-light disabled:bg-slate-400">
+              <button vl-button variant="primary" size="sm" type="button" [loading]="isLoading()" (click)="sendSetPasswordLink()">
                 Enviar link para definir senha
               </button>
             </div>
           }
 
-          <button type="submit" [disabled]="isLoading()"
-                  class="w-full flex justify-center py-3 px-4 text-sm font-bold rounded-lg text-white bg-sv-green hover:bg-sv-green-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sv-green dark:focus:ring-offset-slate-900 disabled:bg-slate-400">
-            {{ isLoading() ? 'Entrando...' : 'Entrar' }}
-          </button>
+          <button vl-button type="submit" size="lg" [block]="true" [loading]="isLoading()">Entrar</button>
         </form>
       }
     </div>

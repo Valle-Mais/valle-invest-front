@@ -1,0 +1,99 @@
+<div class="min-h-screen bg-surface text-text">
+  @if (menuOpen()) {
+    <div class="fixed inset-0 z-30 bg-black/40 lg:hidden" (click)="menuOpen.set(false)"></div>
+  }
+
+  <!-- Sidebar -->
+  <aside
+    class="fixed inset-y-0 left-0 z-40 w-64 bg-surface-raised border-r border-border flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+    [class.translate-x-0]="menuOpen()"
+    [class.-translate-x-full]="!menuOpen()"
+  >
+    <div class="px-5 pt-5 pb-4 border-b border-border">
+      <vl-logo variant="horizontal" [size]="28" />
+      @if (areaLabel()) {
+        <p class="mt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">{{ areaLabel() }}</p>
+      }
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Menu">
+      @for (item of navItems(); track item.link) {
+        <a
+          [routerLink]="item.link"
+          routerLinkActive
+          #rla="routerLinkActive"
+          [routerLinkActiveOptions]="{ exact: !!item.exact }"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+          [class]="rla.isActive ? 'bg-primary text-on-primary' : 'text-text-muted hover:bg-surface-alt hover:text-text'"
+          [attr.aria-current]="rla.isActive ? 'page' : null"
+        >
+          <lucide-icon [name]="item.icon" [size]="18" class="shrink-0" />
+          <span class="flex-1 truncate">{{ item.label }}</span>
+          @if (item.badge) {
+            <span class="min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-accent text-primary-strong text-xs font-bold num">{{ item.badge }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="p-3 border-t border-border space-y-1">
+      <a
+        [routerLink]="changePasswordLink()"
+        routerLinkActive
+        #rlaPwd="routerLinkActive"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+        [class]="rlaPwd.isActive ? 'bg-primary text-on-primary' : 'text-text-muted hover:bg-surface-alt hover:text-text'"
+        [attr.aria-current]="rlaPwd.isActive ? 'page' : null"
+      >
+        <lucide-icon name="key-round" [size]="18" class="shrink-0" />
+        <span>Alterar senha</span>
+      </a>
+      <button
+        type="button"
+        (click)="theme.toggleTheme()"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-muted hover:bg-surface-alt hover:text-text transition-colors"
+      >
+        <lucide-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" [size]="18" class="shrink-0" />
+        <span>{{ theme.theme() === 'dark' ? 'Tema claro' : 'Tema escuro' }}</span>
+      </button>
+      <button
+        type="button"
+        (click)="logout()"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-negative hover:bg-negative-soft transition-colors"
+      >
+        <lucide-icon name="log-out" [size]="18" class="shrink-0" />
+        <span>Sair</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Conteúdo -->
+  <div class="lg:pl-64 flex flex-col min-h-screen">
+    <header class="sticky top-0 z-20 h-16 bg-surface-raised/90 backdrop-blur border-b border-border flex items-center justify-between px-4 sm:px-6">
+      <button vl-button variant="ghost" size="sm" type="button" class="lg:hidden" (click)="menuOpen.set(true)" aria-label="Abrir menu">
+        <lucide-icon name="menu" [size]="22" />
+      </button>
+      <div class="hidden lg:block"></div>
+
+      <div class="flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <p class="text-sm font-semibold text-text leading-tight">{{ userName() || '—' }}</p>
+          <p class="text-xs text-text-muted">{{ roleLabel() }}</p>
+        </div>
+        <div class="h-10 w-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm" aria-hidden="true">
+          {{ initials() }}
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
+      <div class="mx-auto max-w-[1280px]">
+        <ng-content />
+      </div>
+    </main>
+  </div>
+
+  @if (bottomNav().length) {
+    <vl-bottom-nav [items]="bottomNav()" />
+  }
+</div>
