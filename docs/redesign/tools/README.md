@@ -8,7 +8,7 @@ Servidor HTTP na porta 3000 que imita os endpoints da `valle-invest-api` com dad
 
 Rotas servidas: `POST /auth/verify-token`, `GET /clients`, `GET /clients/:id`, `GET /client-transactions`, `GET /client-transactions/pending/count`, `GET /fund-operations`, `GET /performance/admin/summary`, `GET /performance/:clientId`.
 
-Quando a API ganhar os endpoints novos da seção 9 do plano (login com senha, `status` na listagem, `preview` do rateio, `saldoApos`, `seriesReais`), este mock precisa acompanhar.
+O mock já cobre login com senha, `GET /auth/me`, `PATCH /auth/profile`, `status`/`include=operation`/`saldoApos` na listagem de transações e `seriesReais` no dashboard. O `preview` do rateio também está coberto.
 
 ```bash
 node docs/redesign/tools/mock-api.mjs

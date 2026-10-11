@@ -20,7 +20,7 @@ const shots = [
   { name: 'client-alterar-senha', url: '/sistema/alterar-senha', w: 1440, h: 900, tok: CLIENT },
   { name: 'admin-dashboard', url: '/admin/dashboard', w: 1440, h: 900, tok: ADMIN },
   { name: 'admin-dashboard-dark', url: '/admin/dashboard', w: 1440, h: 900, tok: ADMIN, dark: true },
-  { name: 'admin-client-view', url: '/admin/client-view', w: 1440, h: 900, tok: ADMIN },
+  { name: 'admin-client-detail', url: '/admin/clients/c1', w: 1440, h: 1400, tok: ADMIN },
   { name: 'admin-clients', url: '/admin/clients', w: 1440, h: 900, tok: ADMIN },
   { name: 'admin-fund-operations', url: '/admin/fund-operations', w: 1440, h: 900, tok: ADMIN },
   { name: 'admin-client-transactions', url: '/admin/client-transactions', w: 1440, h: 900, tok: ADMIN },
@@ -29,7 +29,9 @@ const shots = [
   { name: 'client-dashboard-dark', url: '/sistema/dashboard', w: 1440, h: 900, tok: CLIENT, dark: true },
   { name: 'client-dashboard-mobile', url: '/sistema/dashboard', w: 390, h: 844, mobile: true, tok: CLIENT },
   { name: 'client-statement', url: '/sistema/statement', w: 1440, h: 900, tok: CLIENT },
-  { name: 'client-operations', url: '/sistema/operations', w: 1440, h: 900, tok: CLIENT },
+  { name: 'client-statement-mobile', url: '/sistema/statement', w: 390, h: 844, mobile: true, tok: CLIENT },
+  { name: 'client-solicitacoes', url: '/sistema/solicitacoes', w: 1440, h: 900, tok: CLIENT },
+  { name: 'client-perfil', url: '/sistema/perfil', w: 1440, h: 900, tok: CLIENT },
 ];
 
 const port = 9333;

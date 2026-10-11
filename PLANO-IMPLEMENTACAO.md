@@ -67,15 +67,15 @@ Base: diagnóstico do código feito em 05/10/2026 e a apresentação `Proposta-R
 | # | Bug | Onde | Efeito |
 |---|---|---|---|
 | B1 | Login redireciona cliente logado para `/client/dashboard`; a rota real é `/sistema/dashboard`. **Corrigido na Fase 1** (`guestGuard` + `AuthService.homeFor`) | `pages/public/login/login.component.ts:37` | Cliente já logado cai na rota curinga e volta para `/` |
-| B2 | Botão de pendências no dashboard admin navega para `/admin/operacoes`, rota inexistente | `pages/private/admin/dashboard/dashboard.component.ts:298` | Link morto na ação principal do admin |
-| B3 | Saldo do extrato invertido: API devolve desc, componente inverte para asc e começa o saldo no total atual | `pages/private/client/statement/statement.component.ts:149-168` | Lançamento mais antigo mostra o saldo de hoje; o mais recente, o menor |
-| B4 | Admin na Visão do Cliente vê os botões Solicitar Aporte/Resgate e a solicitação sai com `clientId` do admin | `pages/private/client/dashboard/dashboard.component.ts:179-202, 488-506` | Pedido criado em nome errado |
+| B2 | Botão de pendências no dashboard admin navega para `/admin/operacoes`, rota inexistente. **Corrigido na Fase 4** | `pages/private/admin/dashboard/dashboard.component.ts:298` | Link morto na ação principal do admin |
+| B3 | Saldo do extrato invertido: API devolve desc, componente inverte para asc e começa o saldo no total atual. **Corrigido na Fase 3**: a API devolve `saldoApos` | `pages/private/client/statement/statement.component.ts:149-168` | Lançamento mais antigo mostra o saldo de hoje; o mais recente, o menor |
+| B4 | Admin na Visão do Cliente vê os botões Solicitar Aporte/Resgate e a solicitação sai com `clientId` do admin. **Corrigido nas Fases 0 e 3** | `pages/private/client/dashboard/dashboard.component.ts:179-202, 488-506` | Pedido criado em nome errado |
 | B5 | Aprovação faz `PATCH /clients/:id` com `totalInvestido` em paralelo ao `PATCH` da transação; a API já recalcula o saldo em transação Firestore | `pages/private/admin/client-transactions/client-transactions.component.ts:631-651` | Redundante e com corrida: pode sobrescrever o saldo calculado pela API |
 | B6 | Dois `AuthService` com estado duplicado. **Corrigido na Fase 1**: serviço único em `src/app/core/auth/`, os dois arquivos antigos viraram re-exports | `src/app/security/` e `src/app/services/` | Sessão inconsistente entre telas |
 | B7 | API sem guard em quase todos os endpoints; registro público com escolha de role | `valle-invest-api/src/*/*.controller.ts`, `auth.controller.ts:15` | Qualquer pessoa cria admin e lê dados de todos |
 | B8 | `PATCH /clients/:id` aceita `role` e `totalInvestido` | `valle-invest-api/src/clients/dto/update-client.dto.ts` | Escalada de privilégio e corrupção de saldo |
-| B9 | Rateio e reprocessamento calculam o saldo de cada cliente com todas as transações aprovadas, sem cortar pela data da operação | `valle-invest-api/src/fund-operations/fund-operations.service.ts` (`distributeResultInTransaction` e `reprocessOperationsFrom`) | Cliente cadastrado depois de uma operação recebe parte do resultado dela e a rentabilidade dos clientes antigos é reescrita. Detalhes na Fase 1.5 |
-| B10 | Rentabilidade mensal do cliente usa `lucro / (saldo anterior + aportes do mês)` | `valle-invest-api/src/performance/performance.service.ts:481-488` | Aporte no fim do mês dilui o ganho de uma operação do começo do mês |
+| B9 (corrigido na Fase 1.5) | Rateio e reprocessamento calculam o saldo de cada cliente com todas as transações aprovadas, sem cortar pela data da operação | `valle-invest-api/src/fund-operations/fund-operations.service.ts` (`distributeResultInTransaction` e `reprocessOperationsFrom`) | Cliente cadastrado depois de uma operação recebe parte do resultado dela e a rentabilidade dos clientes antigos é reescrita. Detalhes na Fase 1.5 |
+| B10 (corrigido na Fase 1.5) | Rentabilidade mensal do cliente usa `lucro / (saldo anterior + aportes do mês)` | `valle-invest-api/src/performance/performance.service.ts:481-488` | Aporte no fim do mês dilui o ganho de uma operação do começo do mês |
 | B11 | Configuração do Firebase (`apiKey`, `projectId`, `appId`) exposta no bundle do front e no git, sem uso | `valle-invest-front/src/environments/*.ts`, `package.json` | Se as regras do Firestore forem permissivas, acesso direto ao banco sem passar pela API |
 
 ---
@@ -228,6 +228,9 @@ Estimativa: 1,5 semana (API 4 dias, front 3 dias).
 
 ## 5.5. Fase 1.5: Motor de rateio e rentabilidade (API)
 
+**Status (10/10/2026): implementada na API, sem commit; backfill pendente.** Motor puro em `src/fund-operations/rateio.ts` (`balancesAsOf`, `distribute`, `replayOperations`); `FundOperationsService.reprocessOperationsFrom(startDate, changes)` é o único caminho de escrita de rendimentos e atende `create`, `update`, `remove` e `triggerReprocessingIfNecessary` numa única transação. Regra do mesmo dia (decisão final de 10/10/2026, depois de duas tentativas por data falharem): participa quem já estava na base quando a operação foi registrada. Transações de dias anteriores entram; no mesmo dia, entra quem foi aprovado antes da hora de registro da operação (`client_transactions.approvedAt` vs `fund_operations.createdAt`; documentos antigos usam o `createTime` do Firestore, então não há backfill). Função `participates` em `rateio.ts`. `triggerReprocessingIfNecessary` reprocessa operações com data igual ou posterior à transação; as do mesmo dia registradas antes dela saem iguais. Rendimentos gravam `taxa` e `operationId`; operações gravam `patrimonioBase` e `taxa`; valores em centavos com a diferença de arredondamento no maior saldo. `PerformanceService` (cliente e admin) e `getMonthlyReturns` usam o produto de `(1 + taxa)` por mês, com fallback para a fórmula antiga enquanto houver rendimento sem `taxa`. Preview usa a base na data informada. Task `npm run seed -- --task=rebuild-yields` criada (imprime saldo antes/depois por cliente). 26 testes novos cobrem os cenários da seção 5.5.2 item 7 e os critérios de aceite abaixo, inclusive o cenário do produto (A fica em 5% após o cadastro e o aporte de B). Pendente: rodar o backfill em staging e depois em produção; limpar os specs de scaffold que falham sem `FIRESTORE`.
+
+
 Objetivo: o resultado de uma operação é dividido só entre quem estava investido na data dela, e a rentabilidade de um cliente depende só do histórico dele. Nenhum cadastro, aporte ou resgate posterior altera rendimentos passados.
 
 ### 5.5.1 Como o problema acontece hoje
@@ -248,7 +251,7 @@ Dois problemas secundários no mesmo motor:
 
 1. **Saldo na data da operação.** Criar uma função única `balancesAsOf(date, transactions)` que soma, por cliente, só as transações aprovadas com `data <= date` (aportes, resgates e rendimentos de operações anteriores). `distributeResultInTransaction` e `reprocessOperationsFrom` passam a usar essa função para a base de cada operação.
 2. **Reprocessamento cronológico.** `reprocessOperationsFrom(startDate)` apaga os rendimentos por `operationId` das operações afetadas, carrega aportes e resgates aprovados, e percorre as operações em ordem de data recalculando a base a cada passo com `balancesAsOf`. O `totalInvestido` final de cada cliente é o resultado da última iteração.
-3. **Regra para o mesmo dia.** Decidir e documentar: um aporte com a mesma data da operação participa ou não do resultado. Recomendação: não participa (só transações com `data < op.data` entram na base), porque o admin registra a operação depois que ela já aconteceu. Se o negócio quiser o contrário, trocar o comparador num único lugar.
+3. **Regra para o mesmo dia.** Decidido em 10/10/2026: desempate pela hora de registro. Comparar só datas falha nos dois sentidos (estrita zera a base quando cliente aporta e admin registra no mesmo dia; inclusiva coloca na operação um cliente criado depois dela). Por isso a transação guarda `approvedAt` e a operação `createdAt`, e no mesmo dia entra quem foi aprovado antes de a operação ser registrada (`participates` em `rateio.ts`).
 4. **Taxa gravada no rendimento.** Ao distribuir, gravar em cada transação de Rendimento o campo `taxa = resultado / patrimonioBase`, além de `valor` e `operationId`. É o mesmo número para todos os clientes da operação.
 5. **Rentabilidade por evento em `performance.service.ts`.** A rentabilidade mensal do cliente passa a ser o produto de `(1 + taxa)` dos rendimentos dele no mês, em vez de `lucro / (saldo + aportes)`. Isso elimina a diluição por aportes no meio do mês e torna o número independente de quando o cliente movimentou dinheiro. O gráfico e a tabela anual seguem a mesma fórmula; `rendimentoReais` continua sendo a soma dos rendimentos em R$.
 6. **Backfill.** Script `seed.ts --task=rebuild-yields` que apaga todos os rendimentos e reprocessa desde a primeira operação com o motor corrigido. Rodar em staging, comparar os saldos finais com os atuais, e só então em produção. O campo `taxa` nasce nesse backfill.
@@ -266,6 +269,8 @@ Estimativa: 3 a 4 dias.
 ---
 
 ## 6. Fase 2: Fundação do design system (front)
+
+**Status (10/10/2026): implementada, sem commit.** Tokens semânticos com dark mode por variáveis em `src/styles.css` (aliases `sv-*` mantidos para o legado), `tailwind.config.js` removido, Inter e Playfair Display carregadas no `index.html` (`lang="pt-BR"`), guia em `src/design-system/README.md`. Componentes em `src/app/ui/`: Button, Field/Input, PageHeader, KpiCard, Badge, DataTable (lista no mobile), Pagination, Drawer, Toast, ConfirmDialog, EmptyState, Skeleton, PeriodSelector, BottomNav, AppShell e registro de ícones (`lucide-angular`). Layouts de admin e cliente passaram a usar o `AppShell`; o botão flutuante de tema saiu e o tema foi para o menu lateral. Login, esqueci-senha, definir-senha e alterar-senha já usam os componentes. Vitrine em `/dev/ui` só em desenvolvimento. Decisão de 10/10/2026: uma única família (Inter) em títulos e interface; a serif foi removida.
 
 Objetivo: criar a camada que não existe hoje, para que as fases 3 e 4 sejam migração de telas e não redesenho ad hoc.
 
@@ -286,7 +291,7 @@ Standalone, com `input()`/`output()` signals, sem lógica de negócio. Cada um s
 | `Button` (variantes primary, secondary, ghost, danger; estado loading) | ~65 botões `bg-emerald-600` e variações | todas |
 | `Field` / `Input` / `Select` com label e erro | inputs repetidos em 6 formulários | login, drawers, filtros |
 | `PageHeader` (título, subtítulo, slot de ações) | cabeçalho repetido em todas as telas | todas |
-| `KpiCard` (label, valor, delta, variante hero) | cards de KPI do admin e do cliente | painel cliente, cockpit |
+| `KpiCard` (label, valor, delta, variante hero) | cards de KPI do admin e do cliente | painel cliente, dashboard do admin |
 | `DataTable` (colunas declarativas, slot de linha, slot mobile em lista) | 58 `<th class="px-6 py-3">` em 5 tabelas | extrato, histórico, operações, clientes |
 | `Pagination` | 4 paginações copiadas | idem |
 | `Drawer` (painel lateral com header, body, footer) | 4 `aside` com `translate-x-full` | registrar transação, operação, cliente |
@@ -295,7 +300,7 @@ Standalone, com `input()`/`output()` signals, sem lógica de negócio. Cada um s
 | `ConfirmDialog` (serviço que retorna Promise) | `window.confirm` em 3 lugares | exclusões, aprovações |
 | `EmptyState` | textos soltos "Nenhuma transação encontrada" | listas |
 | `Skeleton` | blocos `animate-pulse` copiados | painéis |
-| `PeriodSelector` (opções Mês, 6 meses, Ano, Desde o início) | dois grupos de botões e um `select` | painel, cockpit, extrato |
+| `PeriodSelector` (opções Mês, 6 meses, Ano, Desde o início) | dois grupos de botões e um `select` | painel, dashboard do admin, extrato |
 | `BottomNav` | nada | layout cliente mobile |
 | `Icon` | 73 SVGs inline | todas |
 
@@ -325,6 +330,8 @@ Estimativa: 1,5 a 2 semanas.
 ---
 
 ## 7. Fase 3: Área do cliente
+
+**Status (10/10/2026): implementada, sem commit, antes da Fase 1.5 por decisão do produto.** Painel com patrimônio herói, três KPIs compactos, seletor de período único, gráfico alternando % acumulado e R$, tabela mensal com anos em abas (primeira coluna fixa no desktop, lista por mês no mobile), banner de pendências e ações Aportar/Resgatar no cabeçalho, escondidas para o admin em `client-view` (B4 resolvido). Extrato agrupado por mês com saldo após cada lançamento vindo da API (B3 resolvido), descrição da operação nos rendimentos e exportação CSV. Páginas novas: Solicitações (`/sistema/solicitacoes`) e Perfil (`/sistema/perfil`, telefone editável). Bottom nav com Painel, Extrato, Solicitar e Perfil. `client/operations` removido. API: períodos `mes|6m|ano|inicio`, `chartData.seriesReais`, `status` e `include=operation` na listagem de transações com `saldoApos`, `phone` em `users` e `PATCH /auth/profile`. Os números exibidos seguem o cálculo atual até a Fase 1.5 entrar; nada no front precisa mudar quando ela entrar.
 
 Objetivo: "quanto tenho e quanto rendeu" em uma tela e meia no celular.
 
@@ -377,9 +384,11 @@ Estimativa: 2 a 3 semanas.
 
 ## 8. Fase 4: Área do admin
 
+**Status (10/10/2026): implementada, sem commit.** Dashboard do admin com AUM, rentabilidade do período, fluxo líquido do mês e pendências, aprovação direta com confirmação e toast, últimas operações e registro pelo drawer (B2 resolvido: o link morto saiu). Clientes com busca, badges de convite e status, reenvio de convite, ativar/inativar e cadastro com aporte inicial; página de detalhe `/admin/clients/:id` reutiliza o painel do cliente embutido e concentra as ações de gestão (aporte/resgate em nome do cliente, editar nome e telefone). `client-view` virou redirect para a lista. Operações do fundo com filtros, paginação na API, resultado automático, simulação do rateio antes de salvar, alerta de data retroativa, edição e exclusão com confirmação. Aportes e resgates como inbox de pendências mais histórico com filtros, registro e edição pelo admin, exclusão com confirmação. Código morto removido: assets, daily-results, instruments, manage-client, operacoes, users, landing, asset-form, user-form, instruments.service, cdi.service e os pipes. API: `kpis.fluxoLiquidoMes` e `kpis.pendentes` no resumo, `limit` na listagem de transações, `POST /fund-operations/preview`, resultado automático no create e cache de 6 h para CDI e Ibovespa. Nenhum `*ngIf`, SVG inline ou `slate-*` sobrou em `src/app`.
+
 Objetivo: o trabalho do dia em uma tela, sem números repetidos entre páginas.
 
-### 8.1 Cockpit (`/admin/dashboard`)
+### 8.1 Dashboard do admin (`/admin/dashboard`)
 
 - Quatro KPIs: AUM, rentabilidade do período, fluxo líquido do mês, pendências.
 - Lista de pendências com Aprovar/Negar direto, com `ConfirmDialog` e toast.
@@ -411,7 +420,7 @@ Objetivo: o trabalho do dia em uma tela, sem números repetidos entre páginas.
 ### 8.6 Critérios de aceite
 
 - Nenhum KPI aparece em mais de uma página.
-- Aprovar uma pendência no cockpit atualiza o saldo do cliente conforme o recálculo da API, sem PATCH no cliente.
+- Aprovar uma pendência no dashboard atualiza o saldo do cliente conforme o recálculo da API, sem PATCH no cliente.
 - Preview do rateio bate com a distribuição efetivamente gravada.
 
 Estimativa: 2 semanas.
@@ -423,11 +432,11 @@ Estimativa: 2 semanas.
 | Tela | Necessidade | Mudança |
 |---|---|---|
 | Painel cliente | Série de patrimônio em R$ para alternar o gráfico | `GET /performance/:clientId` passa a incluir `chartData.seriesReais` |
-| Painel e cockpit | Períodos consistentes | Aceitar enum `mes`, `6m`, `ano`, `inicio` além das strings atuais; o front envia o enum |
+| Painel e dashboard do admin | Períodos consistentes | Aceitar enum `mes`, `6m`, `ano`, `inicio` além das strings atuais; o front envia o enum |
 | Extrato | Saldo após cada lançamento | `GET /client-transactions` com `clientId` devolve `saldoApos` calculado em ordem cronológica |
 | Extrato | Descrição da operação em rendimentos | `GET /client-transactions` com `include=operation` anexa `operation: { id, descricao, data }` via `operationId` |
-| Cockpit | Fluxo líquido do mês | `GET /performance/admin/summary` ganha `kpis.fluxoLiquidoMes` (aportes menos resgates aprovados no mês corrente) |
-| Cockpit e inbox | Listar pendentes | `FindAllTransactionsDto` ganha `status` e `limit` |
+| Dashboard do admin | Fluxo líquido do mês | `GET /performance/admin/summary` ganha `kpis.fluxoLiquidoMes` (aportes menos resgates aprovados no mês corrente) |
+| Dashboard do admin e inbox | Listar pendentes | `FindAllTransactionsDto` ganha `status` e `limit` |
 | Operações | Preview do rateio | `POST /fund-operations/preview { resultado, data }` executa a mesma lógica de `distributeResultInTransaction` sem escrever, com a base calculada na `data` informada (Fase 1.5), e devolve `[{ clientId, name, saldo, lucro, novoSaldo }]`, `patrimonioBase` e `taxa` |
 | Painel e extrato | Rentabilidade por evento | Transações de Rendimento ganham o campo `taxa` (Fase 1.5); `GET /performance/:clientId` passa a calcular a partir dele |
 | Operações | Resultado automático | `CreateFundOperationDto`: se `resultado` ausente e `valorVenda`/`valorInvestido` presentes, calcular na API |
@@ -497,7 +506,7 @@ Para um desenvolvedor dedicado, com a Fase 2 em paralelo às fases 0 e 1 quando 
 | 1.5. Motor de rateio e rentabilidade | 3 a 4 dias | Base por data, taxa no rendimento, rentabilidade por evento, backfill, testes |
 | 2. Fundação | 1,5 a 2 semanas | Tokens, componentes, shell, telas públicas no visual novo |
 | 3. Cliente | 2 a 3 semanas | Painel, extrato, solicitações, perfil, mobile |
-| 4. Admin | 2 semanas | Cockpit, clientes com detalhe, operações com preview, inbox |
+| 4. Admin | 2 semanas | Dashboard, clientes com detalhe, operações com preview, inbox |
 | 5. Correções e QA | 1 semana | pt-BR, limpeza, testes, revisão visual |
 | **Total** | **10 a 12 semanas** sequencial; **8 a 10** com duas pessoas | |
 

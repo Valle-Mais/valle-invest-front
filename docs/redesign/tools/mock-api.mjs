@@ -122,6 +122,10 @@ http.createServer((req, res) => {
       return json(res, 200, { message: 'ok (mock)' });
     }
     if (p === '/auth/password' && req.method === 'PATCH') return json(res, 200, { message: 'Senha alterada com sucesso.' });
+    if (p === '/auth/profile' && req.method === 'PATCH') {
+      const user = bearerUser(); if (!user) return json(res, 401, { message: 'Unauthorized' });
+      Object.assign(user, JSON.parse(body || '{}')); return json(res, 200, user);
+    }
     if (p === '/auth/verify-token' && req.method === 'POST') {
       const { token } = JSON.parse(body || '{}');
       return json(res, 200, session(token === 'admin' ? users[0] : users[1]));
@@ -136,7 +140,7 @@ http.createServer((req, res) => {
       const s = series(n);
       const twr = s.fundo.at(-1) / 100;
       return json(res, 200, {
-        kpis: { saldoLivre: 0, saldoInvestido: 795130.65, patrimonioTotal: 795130.65, lucroPercentual: twr, totalOperacoes: n === 1 ? 2 : 14, usuariosAtivos: 5 },
+        kpis: { saldoLivre: 0, saldoInvestido: 795130.65, patrimonioTotal: 795130.65, lucroPercentual: twr, totalOperacoes: n === 1 ? 2 : 14, usuariosAtivos: 5, fluxoLiquidoMes: 42000, pendentes: 2 },
         rendimento: { lucroReais: 34800, lucroPercentual: twr, percentualSobreCDI: twr / (s.cdi.at(-1) / 100), percentualSobreIbov: twr / (s.ibov.at(-1) / 100) },
         chartData: { categories: s.categories, series: [{ name: 'Fundo', data: s.fundo }, { name: 'CDI', data: s.cdi }, { name: 'Ibovespa', data: s.ibov }] },
       });
@@ -147,14 +151,34 @@ http.createServer((req, res) => {
       const twr = s.fundo.at(-1) / 100;
       return json(res, 200, {
         cardData: { saldoAtual: 248310.55, rendimentoReais: n === 1 ? 3120.40 : 38310.55, rentabilidadePercentual: twr, percentualSobreCDI: twr / (s.cdi.at(-1) / 100), percentualSobreIbov: twr / (s.ibov.at(-1) / 100) },
-        chartData: { categories: s.categories, series: [{ name: 'Minha Carteira', data: s.fundo }, { name: 'CDI', data: s.cdi }, { name: 'Ibovespa', data: s.ibov }] },
+        chartData: {
+          categories: s.categories,
+          series: [{ name: 'Minha Carteira', data: s.fundo }, { name: 'CDI', data: s.cdi }, { name: 'Ibovespa', data: s.ibov }],
+          seriesReais: [{ name: 'Patrimônio', data: s.fundo.map(v => +(210000 * (1 + v / 100)).toFixed(2)) }],
+        },
         tableData: tableData(n),
       });
     }
     if (p === '/client-transactions/pending/count') return json(res, 200, { count: 2 });
     if (p === '/client-transactions' && req.method === 'GET') {
-      const cid = url.searchParams.get('clientId');
-      return json(res, 200, cid ? transactions.filter(t => t.clientId === cid) : transactions);
+      const cid = url.searchParams.get('clientId'); const status = url.searchParams.get('status'); const include = url.searchParams.get('include');
+      let list = cid ? transactions.filter(t => t.clientId === cid) : transactions;
+      if (status) list = list.filter(t => t.status === status);
+      if (cid) {
+        let bal = 0; const byId = new Map();
+        [...list].sort((a, b) => a.data < b.data ? -1 : 1).forEach(t => { if (t.status === 'Aprovado') { bal += t.tipo === 'Resgate' ? -t.valor : t.valor; byId.set(t.id, +bal.toFixed(2)); } });
+        list = list.map(t => ({ ...t, saldoApos: byId.get(t.id) ?? null }));
+      }
+      if (include === 'operation') list = list.map(t => ({ ...t, operation: t.tipo === 'Rendimento' ? { id: 'op0', descricao: fundOps[0].descricao, data: fundOps[0].data } : null }));
+      const limit = +(url.searchParams.get('limit') || 0); if (limit) list = list.slice(0, limit);
+      return json(res, 200, list);
+    }
+    if (p === '/fund-operations/preview' && req.method === 'POST') {
+      const { resultado } = JSON.parse(body || '{}');
+      const ativos = users.filter(u => u.role === 'client' && u.totalInvestido > 0);
+      const base = ativos.reduce((s, u) => s + u.totalInvestido, 0);
+      const taxa = base ? resultado / base : 0;
+      return json(res, 200, { patrimonioBase: base, taxa, clientes: ativos.map(u => ({ clientId: u.id, name: u.name, saldo: u.totalInvestido, lucro: +(u.totalInvestido * taxa).toFixed(2), novoSaldo: +(u.totalInvestido * (1 + taxa)).toFixed(2) })) });
     }
     if (p === '/fund-operations' && req.method === 'GET') {
       const page = +(url.searchParams.get('page') || 1), limit = +(url.searchParams.get('limit') || 10);
