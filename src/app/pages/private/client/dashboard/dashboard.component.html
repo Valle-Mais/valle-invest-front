@@ -1,202 +1,82 @@
-<div *ngIf="isLoading()" class="space-y-8 animate-pulse">
-  <div class="flex justify-between items-center">
-    <div class="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-    <div class="h-10 bg-slate-200 dark:bg-slate-700 rounded w-48"></div>
-  </div>
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div class="lg:col-span-2 space-y-8">
-      <div class="h-96 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-      <div class="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+<div class="space-y-6">
+  @if (embedded()) {
+    <div class="flex justify-end">
+      <vl-period-selector [value]="period()" (valueChange)="period.set($event)" />
     </div>
-    <div class="lg:col-span-1 space-y-8">
-      <div class="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-      <div class="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-      <div class="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Conteúdo Real -->
-<div
-  *ngIf="!isLoading() && dashboardData"
-  class="grid grid-cols-1 lg:grid-cols-3 gap-8"
->
-  <!-- Coluna Principal (Esquerda) -->
-  <div class="lg:col-span-2 space-y-8">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-slate-800 dark:text-white">
-          Meu Painel
-        </h1>
-        <p class="text-slate-500 dark:text-slate-400">
-          Resumo do seu desempenho financeiro.
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <select
-          (change)="onRangeChange($event)"
-          class="px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-sv-green"
-        >
-          <option value="last6Months">Últimos 6 Meses</option>
-          <option value="thisMonth">Este Mês</option>
-          <option value="thisYear">Este Ano</option>
-          <option value="lastYear">Último Ano</option>
+  } @else {
+  <vl-page-header [title]="isAdmin() ? 'Visão do cliente' : 'Meu painel'"
+                  [subtitle]="isAdmin() ? 'Veja a carteira como o cliente vê.' : 'Quanto você tem e quanto rendeu.'">
+    @if (showSelector()) {
+      <vl-field actions inputId="client-select" class="min-w-56">
+        <select vlInput id="client-select" [ngModel]="selectedClientId()" (ngModelChange)="selectedClientId.set($event)">
+          @for (c of activeClients(); track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
+          }
         </select>
-      </div>
-    </div>
+      </vl-field>
+    }
+    <vl-period-selector actions [value]="period()" (valueChange)="period.set($event)" />
+    @if (!isAdmin()) {
+      <button vl-button actions variant="secondary" (click)="openRequest('Resgate')">
+        <lucide-icon name="arrow-up-from-line" [size]="16" />Resgatar
+      </button>
+    }
+    @if (!isAdmin()) {
+      <button vl-button actions (click)="openRequest('Aporte')">
+        <lucide-icon name="arrow-down-to-line" [size]="16" />Aportar
+      </button>
+    }
+  </vl-page-header>
+  }
 
-    <!-- Gráfico Principal de Evolução -->
-    <div
-      class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800"
-    >
-      <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">
-        Evolução do Património
-      </h3>
-      <div
-        *ngIf="
-          patrimonyChartOptions &&
-          patrimonyChartOptions!.series &&
-          patrimonyChartOptions!.chart &&
-          patrimonyChartOptions!.xaxis &&
-          patrimonyChartOptions!.stroke &&
-          patrimonyChartOptions!.dataLabels &&
-          patrimonyChartOptions!.fill
-        "
-        id="patrimony-chart"
-      >
-        <apx-chart
-          [series]="patrimonyChartOptions.series"
-          [chart]="patrimonyChartOptions.chart"
-          [xaxis]="patrimonyChartOptions.xaxis"
-          [stroke]="patrimonyChartOptions.stroke"
-          [dataLabels]="patrimonyChartOptions.dataLabels"
-          [fill]="patrimonyChartOptions.fill"
-        ></apx-chart>
-      </div>
+  @if (pending().length > 0) {
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning">
+      <span>
+        <strong>{{ pending().length }}</strong> {{ pending().length === 1 ? 'solicitação aguardando' : 'solicitações aguardando' }} aprovação do administrador.
+      </span>
+      <a routerLink="../solicitacoes" class="font-semibold underline-offset-2 hover:underline">Ver solicitações</a>
     </div>
+  }
 
-    <!-- Tabela de Últimas Operações -->
-    <div
-      class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800"
-    >
-      <div class="p-6 flex justify-between items-center">
-        <h3 class="text-lg font-bold text-slate-800 dark:text-white">
-          Últimas Operações
-        </h3>
-        <a
-          routerLink="../operations"
-          class="text-sm font-medium text-sv-green hover:underline"
-          >Ver todas</a
-        >
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
-          <thead
-            class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 uppercase"
-          >
-            <tr>
-              <th class="px-6 py-3">Data</th>
-              <th class="px-6 py-3">Tipo</th>
-              <th class="px-6 py-3">Ativo</th>
-              <th class="px-6 py-3 text-right">Valor (R$)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              *ngFor="let op of dashboardData.recentOperations"
-              class="border-b border-slate-200 dark:border-slate-800"
-            >
-              <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">
-                {{ op.date | date : "dd/MM/yyyy" }}
-              </td>
-              <td class="px-6 py-4">
-                <span
-                  class="px-2 py-1 text-xs font-semibold rounded-full"
-                  [ngClass]="{
-                    'text-green-800 bg-green-100 dark:bg-green-900/30 dark:text-green-300':
-                      op.type === 'Compra' || op.type === 'Aporte',
-                    'text-red-800 bg-red-100 dark:bg-red-900/30 dark:text-red-300':
-                      op.type === 'Venda' || op.type === 'Resgate'
-                  }"
-                  >{{ op.type }}</span
-                >
-              </td>
-              <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">
-                {{ op.asset || "Caixa" }}
-              </td>
-              <td
-                class="px-6 py-4 text-right font-mono"
-                [ngClass]="{
-                  'text-green-500':
-                    op.type === 'Compra' || op.type === 'Aporte',
-                  'text-red-500': op.type === 'Venda' || op.type === 'Resgate'
-                }"
-              >
-                {{ op.quantity * op.price || op.value | currency : "BRL" }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  @if (error()) {
+    <div class="rounded-xl border border-negative/30 bg-negative-soft p-4 text-sm text-negative flex items-center justify-between gap-4">
+      <span>{{ error() }}</span>
+      <button vl-button variant="secondary" size="sm" (click)="reload()">Tentar de novo</button>
+    </div>
+  } @else if (loading()) {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <vl-skeleton class="h-36 lg:col-span-1" />
+      <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <vl-skeleton class="h-24" /><vl-skeleton class="h-24" /><vl-skeleton class="h-24 col-span-2 sm:col-span-1" />
       </div>
     </div>
-  </div>
+    <vl-skeleton class="h-80" />
+    <vl-skeleton class="h-64" />
+  } @else if (!data() || !cards()) {
+    <div class="rounded-xl border border-border bg-surface-raised p-10 text-center text-sm text-text-muted">
+      {{ showSelector() ? 'Selecione um cliente para ver a carteira.' : 'Esta carteira ainda não tem movimentações.' }}
+    </div>
+  } @else {
+    <!-- KPIs -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <vl-kpi-card class="lg:col-span-1" label="Patrimônio atual" [value]="cards()!.saldo" [delta]="cards()!.delta" [deltaLabel]="periodLabel()" [hero]="true" icon="wallet" />
+      <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <vl-kpi-card label="Rentabilidade" [value]="cards()!.rentabilidade" [tone]="cards()!.toneRent" icon="trending-up" />
+        <vl-kpi-card label="vs CDI" [value]="cards()!.cdi" [tone]="cards()!.toneCdi" />
+        <vl-kpi-card class="col-span-2 sm:col-span-1" label="vs Ibovespa" [value]="cards()!.ibov" [tone]="cards()!.toneIbov" />
+      </div>
+    </section>
 
-  <!-- Coluna Lateral (Direita) -->
-  <div class="lg:col-span-1 space-y-8">
-    <div class="space-y-6">
-      <div
-        class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800"
-      >
-        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">
-          Saldo Total
-        </h3>
-        <p class="text-3xl font-bold text-sv-green mt-1">
-          {{ dashboardData.totalBalance | currency : "BRL" }}
-        </p>
-      </div>
-      <div
-        class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800"
-      >
-        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">
-          Resultado (Mês)
-        </h3>
-        <p
-          class="text-2xl font-bold mt-1"
-          [ngClass]="
-            dashboardData.mtdPnlValue >= 0 ? 'text-green-500' : 'text-red-500'
-          "
-        >
-          {{ dashboardData.mtdPnlValue >= 0 ? "+" : "" }}
-          {{ dashboardData.mtdPnlValue | currency : "BRL" }}
-        </p>
-      </div>
-    </div>
+    <!-- Gráfico -->
+    <section class="rounded-xl border border-border bg-surface-raised p-5">
+      <app-evolution-chart [categories]="data()!.chartData.categories" [seriesPercent]="data()!.chartData.series" [seriesReais]="data()!.chartData.seriesReais ?? []" />
+    </section>
 
-    <div
-      class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800"
-    >
-      <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">
-        Composição da Carteira
-      </h3>
-      <div
-        *ngIf="
-          allocationChartOptions!.series &&
-          allocationChartOptions!.chart &&
-          allocationChartOptions!.labels &&
-          allocationChartOptions!.labels &&
-          allocationChartOptions!.legend &&
-          allocationChartOptions!.responsive
-        "
-        id="allocation-chart"
-      >
-        <apx-chart
-          [series]="allocationChartOptions.series"
-          [chart]="allocationChartOptions.chart"
-          [labels]="allocationChartOptions.labels"
-          [legend]="allocationChartOptions.legend"
-          [responsive]="allocationChartOptions.responsive"
-        ></apx-chart>
-      </div>
-    </div>
-  </div>
+    <!-- Tabela mensal -->
+    <app-performance-table [years]="data()!.tableData" />
+  }
+
+  @if (!isAdmin()) {
+    <app-request-drawer [open]="requestOpen()" (openChange)="requestOpen.set($event)" [tipo]="requestType()" [saldoAtual]="data()?.cardData?.saldoAtual ?? null" (created)="onRequestCreated()" />
+  }
 </div>

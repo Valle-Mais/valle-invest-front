@@ -1,0 +1,18 @@
+<vl-drawer [open]="open()" (openChange)="open.set($event)" (closed)="close()" [title]="title">
+  <form class="space-y-5" (ngSubmit)="submit()" id="request-form">
+    <vl-field label="Valor (R$)" inputId="req-valor" [required]="true" [error]="error()">
+      <input vlInput id="req-valor" name="valor" type="number" min="1" step="0.01" inputmode="decimal" placeholder="0,00" [(ngModel)]="valor" [invalid]="!!error()" />
+    </vl-field>
+    <p class="text-sm text-text-muted">
+      @if (tipo() === 'Aporte') {
+        Depois de enviar, faça a transferência combinada com a Valle. O aporte entra no seu saldo quando o administrador aprovar.
+      } @else {
+        O valor é transferido para a sua conta após a aprovação do administrador.
+      }
+    </p>
+  </form>
+  <div footer class="flex justify-end gap-2">
+    <button vl-button variant="secondary" type="button" (click)="close()">Cancelar</button>
+    <button vl-button type="submit" form="request-form" [loading]="saving()">Enviar solicitação</button>
+  </div>
+</vl-drawer>

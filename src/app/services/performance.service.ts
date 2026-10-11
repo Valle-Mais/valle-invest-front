@@ -1,25 +1,47 @@
-// Arquivo: src/app/services/performance.service.ts
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-// --- Interfaces para a Resposta da API ---
+/** Períodos aceitos pela API (enum curto). As strings legadas continuam valendo. */
+export type PerformancePeriod = 'mes' | '6m' | 'ano' | 'inicio';
+
+export interface IChartSeries {
+  name: string;
+  data: number[];
+}
+
+export interface IPerformanceYear {
+  year: number;
+  items: {
+    label: 'Fundo' | 'CDI' | 'Ibovespa';
+    monthlyValues: (number | null)[];
+    annualTotal: number;
+  }[];
+}
+
+/** Resposta de GET /performance/:clientId */
 export interface IDashboardData {
   cardData: {
     saldoAtual: number;
     rendimentoReais: number;
+    /** decimal: 0.242 = 24,2% */
     rentabilidadePercentual: number;
+    /** razão: 1.11 = 111% do CDI */
     percentualSobreCDI: number;
-     percentualSobreIbov: number;
+    percentualSobreIbov: number;
   };
   chartData: {
     categories: string[];
-    series: any[];
+    /** Rentabilidade acumulada em %: Minha Carteira, CDI, Ibovespa */
+    series: IChartSeries[];
+    /** Patrimônio em R$ ao fim de cada mês, mesmas categorias */
+    seriesReais: IChartSeries[];
   };
-  tableData: any[];
+  tableData: IPerformanceYear[];
 }
 
+/** Tipos usados pelo dashboard legado do admin (migra na Fase 4). */
 export interface IKPIs {
   saldoLivre: number;
   saldoInvestido: number;
@@ -29,60 +51,49 @@ export interface IKPIs {
 }
 
 export interface IRendimento {
-    lucroReais: number;
-    lucroPercentual: number;
-    percentualSobreCDI: number;
+  lucroReais: number;
+  lucroPercentual: number;
+  percentualSobreCDI: number;
 }
 
 export interface IChartData {
-    series: { name: string; data: number[] }[];
-    categories: string[];
+  series: { name: string; data: number[] }[];
+  categories: string[];
 }
 
-// Resumo para o Dashboard do Cliente
-export interface IClientDashboardSummary {
-  saldoAtual: number;
-  rendimentoReais: number;
-  rentabilidadePercentual: number;
-  percentualSobreCDI: number;
-  chartData: IChartData;
+export interface IAdminKpis {
+  saldoLivre: number;
+  saldoInvestido: number;
+  patrimonioTotal: number;
+  lucroPercentual: number;
+  totalOperacoes: number;
+  usuariosAtivos: number;
+  /** Aportes menos resgates aprovados no mês corrente */
+  fluxoLiquidoMes: number;
+  pendentes: number;
 }
 
 export interface IDashboardSummary {
-  kpis: any;
-  rendimento: { // Garanta que a nova propriedade esteja aqui
+  kpis: IAdminKpis;
+  rendimento: {
     lucroReais: number;
     lucroPercentual: number;
     percentualSobreCDI: number;
-    percentualSobreIbov: number; // NOVO
+    percentualSobreIbov: number;
   };
   chartData: any;
 }
 
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PerformanceService {
-  private apiUrl = `${environment.apiUrl}/performance`;
-
-  constructor(private http: HttpClient) { }
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/performance`;
 
   getDashboardSummary(periodo: string): Observable<IDashboardSummary> {
-    return this.http.get<IDashboardSummary>(`${this.apiUrl}/admin/summary`, {
-      params: { periodo }
-    });
+    return this.http.get<IDashboardSummary>(`${this.apiUrl}/admin/summary`, { params: { periodo } });
   }
 
-  // NOVO MÉTODO para o Dashboard do Cliente
-  getClientDashboardSummary(clientId: string, period: string = 'Mês'): Observable<IClientDashboardSummary> {
-    const params = new HttpParams().set('period', period);
-    return this.http.get<IClientDashboardSummary>(`${this.apiUrl}/client/${clientId}`, { params });
-  }
-
-   getPerformanceDashboard(clientId: string, periodo: string): Observable<IDashboardData> {
-    return this.http.get<IDashboardData>(`${this.apiUrl}/${clientId}`, {
-      params: { periodo } // Envia 'periodo' como query param (ex: ?periodo=Ano)
-    });
+  getPerformanceDashboard(clientId: string, periodo: PerformancePeriod | string): Observable<IDashboardData> {
+    return this.http.get<IDashboardData>(`${this.apiUrl}/${clientId}`, { params: { periodo } });
   }
 }

@@ -1,0 +1,77 @@
+<div class="rounded-xl border border-border bg-surface-raised overflow-hidden">
+  <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-border">
+    <div>
+      <h3 class="text-lg font-bold text-text">Rentabilidade mensal</h3>
+      <p class="text-xs text-text-muted">Carteira vs CDI vs Ibovespa, em % ao mês</p>
+    </div>
+    @if (years().length > 1) {
+      <div class="inline-flex items-center gap-1 rounded-lg bg-surface-alt p-1" role="tablist">
+        @for (y of years(); track y.year) {
+          <button type="button" role="tab" [attr.aria-selected]="y.year === current()?.year" (click)="selectedYear.set(y.year)"
+                  class="px-3 py-1 rounded-md text-xs font-semibold num transition-colors"
+                  [class]="y.year === current()?.year ? 'bg-surface-raised text-primary shadow-sm' : 'text-text-muted hover:text-text'">{{ y.year }}</button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!current()) {
+    <p class="px-5 py-10 text-center text-sm text-text-muted">Sem dados de rentabilidade no período.</p>
+  } @else {
+    <!-- Desktop -->
+    <div class="hidden md:block overflow-x-auto">
+      <table class="w-full text-sm text-center num">
+        <thead class="bg-surface-alt text-xs uppercase tracking-wide text-text-muted">
+          <tr>
+            <th class="sticky left-0 z-10 bg-surface-alt px-4 py-3 text-left font-semibold">{{ current()!.year }}</th>
+            @for (m of months; track m) {
+              <th class="px-3 py-3 font-semibold">{{ m }}</th>
+            }
+            <th class="px-4 py-3 font-semibold bg-accent-soft text-accent-strong">Ano</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          @for (item of current()!.items; track item.label) {
+            <tr>
+              <td class="sticky left-0 z-10 bg-surface-raised px-4 py-3 text-left font-semibold text-text font-sans">{{ label(item.label) }}</td>
+              @for (v of item.monthlyValues; track $index) {
+                <td class="px-3 py-3" [class]="tone(v)">{{ fmt(v) }}</td>
+              }
+              <td class="px-4 py-3 font-bold bg-accent-soft/40" [class]="tone(item.annualTotal)">{{ fmt(item.annualTotal) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile: um bloco por mês -->
+    <div class="md:hidden divide-y divide-border">
+      <div class="px-4 py-3 flex items-center justify-between text-xs uppercase tracking-wide text-text-muted bg-surface-alt">
+        <span>Mês</span>
+        <span class="flex gap-4">
+          @for (item of current()!.items; track item.label) {
+            <span class="w-16 text-right">{{ label(item.label) }}</span>
+          }
+        </span>
+      </div>
+      @for (row of monthRows(); track row.month) {
+        <div class="px-4 py-3 flex items-center justify-between text-sm">
+          <span class="font-medium text-text">{{ monthsLong[row.month] }}</span>
+          <span class="flex gap-4 num">
+            @for (v of row.values; track $index) {
+              <span class="w-16 text-right font-semibold" [class]="tone(v)">{{ fmt(v) }}</span>
+            }
+          </span>
+        </div>
+      }
+      <div class="px-4 py-3 flex items-center justify-between text-sm bg-accent-soft/40">
+        <span class="font-bold text-text">Ano {{ current()!.year }}</span>
+        <span class="flex gap-4 num">
+          @for (item of current()!.items; track item.label) {
+            <span class="w-16 text-right font-bold" [class]="tone(item.annualTotal)">{{ fmt(item.annualTotal) }}</span>
+          }
+        </span>
+      </div>
+    </div>
+  }
+</div>

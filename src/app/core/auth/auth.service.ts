@@ -114,6 +114,13 @@ export class AuthService {
     return this.http.patch<{ message: string }>(`${this.apiUrl}/password`, { currentPassword, newPassword });
   }
 
+  /** Dados de contato do próprio usuário. Atualiza o currentUser com a resposta. */
+  updateProfile(fields: { phone?: string }): Observable<IUser> {
+    return this.http
+      .patch<IUser>(`${this.apiUrl}/profile`, fields)
+      .pipe(tap((user) => this.currentUser.set(user)));
+  }
+
   /** Admin reenvia o convite de primeiro acesso. */
   resendInvite(userId: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/invite/resend`, {

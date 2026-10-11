@@ -1,0 +1,52 @@
+<div class="space-y-6">
+  <vl-page-header title="Solicitações" subtitle="Peça um aporte ou resgate e acompanhe a aprovação.">
+    <button vl-button actions variant="secondary" (click)="openRequest('Resgate')">
+      <lucide-icon name="arrow-up-from-line" [size]="16" />Resgatar
+    </button>
+    <button vl-button actions (click)="openRequest('Aporte')">
+      <lucide-icon name="arrow-down-to-line" [size]="16" />Aportar
+    </button>
+  </vl-page-header>
+
+  <section class="space-y-3">
+    <h2 class="text-lg font-bold text-text">Aguardando aprovação</h2>
+    @if (loading()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><vl-skeleton class="h-24" /><vl-skeleton class="h-24" /></div>
+    } @else if (pending().length === 0) {
+      <div class="rounded-xl border border-border bg-surface-raised">
+        <vl-empty-state icon="inbox" title="Nenhuma solicitação pendente" description="Quando você pedir um aporte ou resgate, ele aparece aqui até o administrador analisar." />
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (t of pending(); track t.id) {
+          <div class="rounded-xl border border-border bg-surface-raised p-4 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <vl-badge [tone]="typeTone(t.tipo)">{{ t.tipo }}</vl-badge>
+              <span class="text-xs num text-text-muted">{{ t.data | date: 'dd/MM/yyyy' : 'UTC' }}</span>
+            </div>
+            <p class="text-2xl font-bold num text-text">{{ fmt(t.valor) }}</p>
+            <span class="inline-flex items-center gap-1 text-xs font-semibold text-warning">
+              <lucide-icon name="info" [size]="14" />Pendente
+            </span>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-lg font-bold text-text">Histórico</h2>
+    <div class="rounded-xl border border-border bg-surface-raised overflow-hidden">
+      <vl-data-table [columns]="columns" [rows]="history()" [loading]="loading()" emptyTitle="Nenhuma solicitação anterior" emptyDescription="Aportes e resgates aprovados ou negados aparecem aqui.">
+        <ng-template vlCell="tipo" let-row>
+          <vl-badge [tone]="typeTone(row.tipo)">{{ row.tipo }}</vl-badge>
+        </ng-template>
+        <ng-template vlCell="status" let-row>
+          <vl-badge [tone]="statusTone(row.status)">{{ row.status }}</vl-badge>
+        </ng-template>
+      </vl-data-table>
+    </div>
+  </section>
+
+  <app-request-drawer [open]="requestOpen()" (openChange)="requestOpen.set($event)" [tipo]="requestType()" (created)="load()" />
+</div>

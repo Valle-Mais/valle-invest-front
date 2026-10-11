@@ -1,106 +1,82 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, Subject, map, shareReplay, startWith, switchMap } from 'rxjs';
+import { Observable, Subject, shareReplay, startWith, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-// Interface para as transações dos clientes
+export type TransactionType = 'Aporte' | 'Resgate' | 'Rendimento';
+export type TransactionStatus = 'Pendente' | 'Aprovado' | 'Negado';
+
 export interface IClientTransaction {
   id: string;
+  /** ISO */
   data: string;
   clientName: string;
   clientId: string;
-  tipo: 'Aporte' | 'Resgate' | 'Rendimento'; // Adicionado 'Rendimento'
+  tipo: TransactionType;
   valor: number;
-  status: 'Pendente' | 'Aprovado' | 'Negado';
-  saldo?: number; // Saldo após a transação (calculado no frontend)
-
+  status: TransactionStatus;
+  operationId?: string;
+  /** Saldo após a transação, calculado pela API em listagens por cliente (só aprovadas). */
+  saldoApos?: number | null;
+  /** Operação do fundo que gerou o rendimento, quando pedido com include=operation. */
+  operation?: { id: string; descricao: string; data: string } | null;
 }
 
-
-interface TransactionFilters {
+export interface TransactionFilters {
   startDate?: string | null;
   endDate?: string | null;
-   clientId?: string | null;
-
+  clientId?: string | null;
+  status?: TransactionStatus | null;
+  include?: 'operation' | null;
 }
 
-@Injectable({
-  providedIn: 'root',
-})
-export class ClientTransactionsService {
-  private apiUrl = `${environment.apiUrl}/client-transactions`; // Ajuste o URL da API se necessário
-   private refreshPendingCount$ = new Subject<void>();
+/** Payload de criação. O status é decidido pelo endpoint; clientId é ignorado em /request. */
+export interface CreateTransactionPayload {
+  data: string;
+  tipo: TransactionType;
+  valor: number;
+  clientId?: string;
+}
 
-  constructor(private http: HttpClient) {}
+@Injectable({ providedIn: 'root' })
+export class ClientTransactionsService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/client-transactions`;
+  private readonly refreshPendingCount$ = new Subject<void>();
 
   notifyPendingRequestsChange(): void {
     this.refreshPendingCount$.next();
   }
 
-   getPendingCount(): Observable<{ count: number }> {
+  getPendingCount(): Observable<{ count: number }> {
     return this.refreshPendingCount$.pipe(
-      // startWith(undefined) garante que a busca seja feita na primeira vez que alguém se inscreve
       startWith(undefined),
-      // switchMap cancela a requisição anterior e faz uma nova
       switchMap(() => this.http.get<{ count: number }>(`${this.apiUrl}/pending/count`)),
-      // shareReplay garante que todos os componentes que se inscreverem compartilhem o mesmo resultado
-      shareReplay(1)
+      shareReplay(1),
     );
   }
 
-  /**
-   * Busca todas as transações do backend.
-   */
-getClientTransactions(filters: TransactionFilters = {}): Observable<IClientTransaction[]> {
+  getClientTransactions(filters: TransactionFilters = {}): Observable<IClientTransaction[]> {
     let params = new HttpParams();
-
-    if (filters.startDate) {
-      params = params.set('startDate', filters.startDate);
-    }
-    if (filters.endDate) {
-      params = params.set('endDate', filters.endDate);
-    }
-
-    if (filters.clientId) {
-      params = params.set('clientId', filters.clientId);
-    }
-
-    // A chamada HTTP agora envia os parâmetros
+    if (filters.startDate) params = params.set('startDate', filters.startDate);
+    if (filters.endDate) params = params.set('endDate', filters.endDate);
+    if (filters.clientId) params = params.set('clientId', filters.clientId);
+    if (filters.status) params = params.set('status', filters.status);
+    if (filters.include) params = params.set('include', filters.include);
     return this.http.get<IClientTransaction[]>(this.apiUrl, { params });
   }
 
-  /**
-   * Cria uma nova transação.
-   * @param transaction Os dados da nova transação.
-   */
-  createClientTransaction(
-    transaction: Partial<IClientTransaction>
-  ): Observable<IClientTransaction> {
+  /** Admin registra uma transação já aprovada. */
+  createClientTransaction(transaction: CreateTransactionPayload): Observable<IClientTransaction> {
     return this.http.post<IClientTransaction>(this.apiUrl, transaction);
   }
 
-  /**
-   * Cria uma nova solicitação de transação (com status Pendente).
-   * @param request Os dados da nova solicitação.
-   */
-  createRequest(
-    request: Partial<IClientTransaction>
-  ): Observable<IClientTransaction> {
-    return this.http.post<IClientTransaction>(
-      `${this.apiUrl}/request`,
-      request
-    );
+  /** Cliente solicita aporte ou resgate; entra como Pendente em nome do usuário do token. */
+  createRequest(request: CreateTransactionPayload): Observable<IClientTransaction> {
+    return this.http.post<IClientTransaction>(`${this.apiUrl}/request`, request);
   }
 
-  /**
-   * Atualiza uma transação existente (ex: para aprovar/negar).
-   * @param id O ID da transação a ser atualizada.
-   * @param updates As atualizações a serem aplicadas.
-   */
-  updateClientTransaction(
-    id: string,
-    updates: Partial<IClientTransaction>
-  ): Observable<IClientTransaction> {
+  updateClientTransaction(id: string, updates: Partial<Pick<IClientTransaction, 'data' | 'tipo' | 'valor' | 'status' | 'clientId'>>): Observable<IClientTransaction> {
     return this.http.patch<IClientTransaction>(`${this.apiUrl}/${id}`, updates);
   }
 

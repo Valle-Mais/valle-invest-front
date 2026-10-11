@@ -1,70 +1,91 @@
-<!-- src/app/pages/private/client/statement/statement.component.html -->
-
-<div class="space-y-8">
-
-  <!-- Cabeçalho da Página com Filtros -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div>
-      <h1 class="text-3xl font-bold text-slate-800 dark:text-white">Extrato Financeiro</h1>
-      <p class="text-slate-500 dark:text-slate-400">Histórico de todas as suas movimentações financeiras.</p>
-    </div>
-    <!-- Filtros -->
-    <div class="flex items-center gap-2">
-      <select class="px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-sv-green">
-        <option>Todas as Transações</option>
-        <option>Aportes</option>
-        <option>Resgates</option>
-        <option>Dividendos</option>
+<div class="space-y-6">
+  <vl-page-header title="Extrato" subtitle="Aportes, resgates e rendimentos aprovados, mês a mês.">
+    <vl-field actions inputId="type-filter">
+      <select vlInput id="type-filter" [ngModel]="type()" (ngModelChange)="type.set($event)">
+        <option value="Todos">Todos os lançamentos</option>
+        <option value="Aporte">Aportes</option>
+        <option value="Resgate">Resgates</option>
+        <option value="Rendimento">Rendimentos</option>
       </select>
-      <input type="date" class="px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-sv-green">
-    </div>
-  </div>
+    </vl-field>
+    <vl-period-selector actions [value]="period()" (valueChange)="period.set($event)" />
+    <button vl-button actions variant="secondary" (click)="exportCsv()">
+      <lucide-icon name="file-text" [size]="16" />CSV
+    </button>
+  </vl-page-header>
 
-  <!-- Tabela de Extrato Financeiro -->
-  <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm text-left">
-        <thead class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 uppercase">
-          <tr>
-            <th class="px-6 py-3">Data</th>
-            <th class="px-6 py-3">Descrição</th>
-            <th class="px-6 py-3 text-right">Valor (R$)</th>
-            <th class="px-6 py-3 text-right">Saldo (R$)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Exemplo de Linha de Dados -->
-          <tr class="border-b border-slate-200 dark:border-slate-800">
-            <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">20/07/2024</td>
-            <td class="px-6 py-4">Aporte em Carteira</td>
-            <td class="px-6 py-4 text-right font-mono text-green-500">+ 10.000,00</td>
-            <td class="px-6 py-4 text-right font-mono text-slate-500 dark:text-slate-400">147.821,50</td>
-          </tr>
-          <tr class="border-b border-slate-200 dark:border-slate-800">
-            <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">15/07/2024</td>
-            <td class="px-6 py-4">Recebimento de Dividendos - Ação XYZ</td>
-            <td class="px-6 py-4 text-right font-mono text-green-500">+ 250,75</td>
-            <td class="px-6 py-4 text-right font-mono text-slate-500 dark:text-slate-400">137.821,50</td>
-          </tr>
-          <tr class="border-b border-slate-200 dark:border-slate-800">
-            <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">05/07/2024</td>
-            <td class="px-6 py-4">Resgate Parcial</td>
-            <td class="px-6 py-4 text-right font-mono text-red-500">- 5.000,00</td>
-            <td class="px-6 py-4 text-right font-mono text-slate-500 dark:text-slate-400">137.570,75</td>
-          </tr>
-           <tr class="border-b border-slate-200 dark:border-slate-800">
-            <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">01/07/2024</td>
-            <td class="px-6 py-4">Aporte em Carteira</td>
-            <td class="px-6 py-4 text-right font-mono text-green-500">+ 15.000,00</td>
-            <td class="px-6 py-4 text-right font-mono text-slate-500 dark:text-slate-400">142.570,75</td>
-          </tr>
-        </tbody>
-      </table>
+  @if (error()) {
+    <div class="rounded-xl border border-negative/30 bg-negative-soft p-4 text-sm text-negative flex items-center justify-between gap-4">
+      <span>{{ error() }}</span>
+      <button vl-button variant="secondary" size="sm" (click)="load()">Tentar de novo</button>
     </div>
-    <!-- Paginação (Opcional) -->
-    <div class="p-4 flex justify-end">
-      <span class="text-xs text-slate-500">Página 1 de 5</span>
+  } @else if (loading()) {
+    <div class="space-y-3">
+      <vl-skeleton class="h-10 w-48" />
+      <vl-skeleton class="h-16" /><vl-skeleton class="h-16" /><vl-skeleton class="h-16" />
     </div>
-  </div>
+  } @else if (groups().length === 0) {
+    <div class="rounded-xl border border-border bg-surface-raised">
+      <vl-empty-state title="Nenhum lançamento no período" description="Ajuste o período ou o tipo de lançamento." />
+    </div>
+  } @else {
+    @for (g of groups(); track g.key) {
+      <section class="rounded-xl border border-border bg-surface-raised overflow-hidden">
+        <header class="flex items-center justify-between gap-4 px-5 py-3 bg-surface-alt">
+          <h2 class="text-base font-bold text-text">{{ g.label }}</h2>
+          <span class="text-sm font-semibold num" [class]="g.net >= 0 ? 'text-positive' : 'text-negative'">{{ fmtSigned(g.net) }}</span>
+        </header>
 
+        <!-- Desktop -->
+        <table class="hidden md:table w-full text-sm">
+          <thead class="text-xs uppercase tracking-wide text-text-muted">
+            <tr class="border-b border-border">
+              <th class="px-5 py-2 text-left font-semibold w-28">Data</th>
+              <th class="px-5 py-2 text-left font-semibold">Lançamento</th>
+              <th class="px-5 py-2 text-right font-semibold w-40">Valor</th>
+              <th class="px-5 py-2 text-right font-semibold w-44">Saldo após</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            @for (t of g.items; track t.id) {
+              <tr>
+                <td class="px-5 py-3 num text-text-muted">{{ t.data | date: 'dd/MM/yyyy' : 'UTC' }}</td>
+                <td class="px-5 py-3">
+                  <span class="flex items-center gap-2 text-text">
+                    <vl-badge [tone]="tone(t)">{{ t.tipo }}</vl-badge>
+                    @if (t.tipo === 'Rendimento' && t.operation?.descricao) {
+                      <span class="text-text-muted truncate">{{ t.operation!.descricao }}</span>
+                    }
+                  </span>
+                </td>
+                <td class="px-5 py-3 text-right num font-semibold" [class]="t.tipo === 'Resgate' ? 'text-negative' : 'text-positive'">{{ fmtSigned(signedValue(t)) }}</td>
+                <td class="px-5 py-3 text-right num text-text-muted">{{ fmt(t.saldoApos) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Mobile -->
+        <div class="md:hidden divide-y divide-border">
+          @for (t of g.items; track t.id) {
+            <div class="px-4 py-3 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <vl-badge [tone]="tone(t)">{{ t.tipo }}</vl-badge>
+                  <span class="text-xs num text-text-muted">{{ t.data | date: 'dd/MM' : 'UTC' }}</span>
+                </div>
+                @if (t.tipo === 'Rendimento' && t.operation?.descricao) {
+                  <p class="mt-1 text-xs text-text-muted truncate">{{ t.operation!.descricao }}</p>
+                }
+              </div>
+              <div class="text-right shrink-0">
+                <p class="num font-semibold" [class]="t.tipo === 'Resgate' ? 'text-negative' : 'text-positive'">{{ fmtSigned(signedValue(t)) }}</p>
+                <p class="text-xs num text-text-muted">saldo {{ fmt(t.saldoApos) }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
 </div>
