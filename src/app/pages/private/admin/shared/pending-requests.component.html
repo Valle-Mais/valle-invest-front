@@ -1,0 +1,30 @@
+@if (loading()) {
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"><vl-skeleton class="h-28" /><vl-skeleton class="h-28" /><vl-skeleton class="h-28" /></div>
+} @else if (requests().length === 0) {
+  <div class="rounded-xl border border-border bg-surface-raised">
+    <vl-empty-state icon="circle-check" title="Nenhuma solicitação pendente" description="Aportes e resgates pedidos pelos clientes aparecem aqui para aprovação." />
+  </div>
+} @else {
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    @for (t of requests(); track t.id) {
+      <div class="rounded-xl border border-border bg-surface-raised p-4 flex flex-col gap-3">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-semibold text-text truncate">{{ t.clientName }}</p>
+            <p class="text-xs text-text-muted num">{{ t.data | date: 'dd/MM/yyyy' : 'UTC' }}</p>
+          </div>
+          <vl-badge [tone]="tone(t.tipo)">{{ t.tipo }}</vl-badge>
+        </div>
+        <p class="text-2xl font-bold num text-text">{{ fmt(t.valor) }}</p>
+        <div class="flex gap-2">
+          <button vl-button size="sm" type="button" class="flex-1" [loading]="busyId() === t.id" [disabled]="!!busyId()" (click)="process(t, 'Aprovado')">
+            <lucide-icon name="check" [size]="16" />Aprovar
+          </button>
+          <button vl-button size="sm" variant="secondary" type="button" class="flex-1" [disabled]="!!busyId()" (click)="process(t, 'Negado')">
+            <lucide-icon name="ban" [size]="16" />Negar
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}

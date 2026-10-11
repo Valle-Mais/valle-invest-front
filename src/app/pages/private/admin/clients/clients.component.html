@@ -1,1 +1,77 @@
-<p>clients works!</p>
+<div class="space-y-6">
+  <vl-page-header title="Clientes" subtitle="Quem investe com a Valle, saldo e situação de acesso.">
+    <button vl-button actions (click)="openCreate()">
+      <lucide-icon name="plus" [size]="16" />Novo cliente
+    </button>
+  </vl-page-header>
+
+  <section class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+    <vl-kpi-card label="Saldo total dos clientes" [value]="metrics().total" icon="wallet" />
+    <vl-kpi-card label="Clientes ativos" [value]="metrics().ativos" icon="users" />
+    <vl-kpi-card class="col-span-2 lg:col-span-1" label="Convites pendentes" [value]="metrics().convites" [tone]="metrics().convites !== '0' ? 'negative' : 'neutral'" icon="mail" />
+  </section>
+
+  <div class="rounded-xl border border-border bg-surface-raised overflow-hidden">
+    <div class="p-4 border-b border-border">
+      <vl-field inputId="client-search" class="max-w-sm">
+        <input vlInput id="client-search" type="search" placeholder="Buscar por nome ou email" [ngModel]="search()" (ngModelChange)="onSearch($event)" />
+      </vl-field>
+    </div>
+
+    <vl-data-table [columns]="columns" [rows]="rows()" [loading]="loading()" emptyTitle="Nenhum cliente encontrado" emptyDescription="Ajuste a busca ou cadastre um novo cliente.">
+      <ng-template vlCell="name" let-u>
+        <a [routerLink]="[u.id]" class="group block min-w-0">
+          <span class="flex items-center gap-2">
+            <span class="font-semibold text-text group-hover:text-primary group-hover:underline">{{ u.name }}</span>
+            @if (u.role === 'admin') { <vl-badge tone="accent">Admin</vl-badge> }
+            @if (u.mustSetPassword) { <vl-badge tone="warning">Convite pendente</vl-badge> }
+          </span>
+          <span class="block text-xs text-text-muted">{{ u.email }}</span>
+        </a>
+      </ng-template>
+      <ng-template vlCell="status" let-u>
+        <vl-badge [tone]="u.status === 'Ativo' ? 'positive' : 'neutral'">{{ u.status }}</vl-badge>
+      </ng-template>
+      <ng-template vlCell="acoes" let-u>
+        <span class="inline-flex items-center gap-1">
+          <a vl-button variant="ghost" size="sm" [routerLink]="[u.id]" title="Ver detalhe"><lucide-icon name="eye" [size]="16" /></a>
+          <button vl-button variant="ghost" size="sm" type="button" title="Reenviar convite" [loading]="busyId() === u.id" (click)="resendInvite(u)"><lucide-icon name="mail" [size]="16" /></button>
+          <button vl-button variant="ghost" size="sm" type="button" [title]="u.status === 'Ativo' ? 'Inativar' : 'Ativar'" [disabled]="busyId() === u.id" (click)="toggleStatus(u)"><lucide-icon name="power" [size]="16" /></button>
+        </span>
+      </ng-template>
+    </vl-data-table>
+    <vl-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
+  </div>
+
+  <vl-drawer [open]="drawerOpen()" (openChange)="drawerOpen.set($event)" title="Novo cliente">
+    <form id="client-form" class="space-y-5" (ngSubmit)="save()">
+      <vl-field label="Nome" inputId="c-name" [required]="true">
+        <input vlInput id="c-name" name="name" type="text" required [(ngModel)]="form.name" />
+      </vl-field>
+      <vl-field label="Email" inputId="c-email" [required]="true" hint="O convite para definir a senha vai para este email.">
+        <input vlInput id="c-email" name="email" type="email" required [(ngModel)]="form.email" />
+      </vl-field>
+      <div class="grid grid-cols-2 gap-4">
+        <vl-field label="Perfil" inputId="c-role">
+          <select vlInput id="c-role" name="role" [(ngModel)]="form.role">
+            <option value="client">Cliente</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </vl-field>
+        <vl-field label="Telefone" inputId="c-phone">
+          <input vlInput id="c-phone" name="phone" type="tel" maxlength="30" [(ngModel)]="form.phone" />
+        </vl-field>
+      </div>
+      <vl-field label="Aporte inicial (R$)" inputId="c-aporte" hint="Opcional. Entra como aporte aprovado na data de hoje.">
+        <input vlInput id="c-aporte" name="totalInvestido" type="number" min="0" step="0.01" inputmode="decimal" [(ngModel)]="form.totalInvestido" />
+      </vl-field>
+      @if (formError()) {
+        <div class="p-3 text-sm rounded-lg bg-negative-soft text-negative" role="alert">{{ formError() }}</div>
+      }
+    </form>
+    <div footer class="flex justify-end gap-2">
+      <button vl-button variant="secondary" type="button" (click)="drawerOpen.set(false)">Cancelar</button>
+      <button vl-button type="submit" form="client-form" [loading]="saving()">Criar e convidar</button>
+    </div>
+  </vl-drawer>
+</div>

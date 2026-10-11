@@ -1,14 +1,11 @@
-// -------------------------------------------------------------------
-// 1. Serviço de Operações do Fundo (sem alterações, para contexto)
-// Arquivo: src/app/services/fund-operations.service.ts
-// -------------------------------------------------------------------
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface IFundOperation {
   id?: string;
+  /** ISO */
   data: string;
   descricao?: string;
   valorInvestido: number;
@@ -17,46 +14,57 @@ export interface IFundOperation {
 }
 
 export interface FundOperationFilters {
-  startDate?: string;
-  endDate?: string;
-  tipo?: 'Entrada' | 'Saída';
-  valorMin?: number;
-  valorMax?: number;
+  startDate?: string | null;
+  endDate?: string | null;
   sortBy?: 'data' | 'valor';
   sortOrder?: 'asc' | 'desc';
-   page?: number;
+  page?: number;
   limit?: number;
 }
 
 export interface IPaginatedFundOperations {
-    data: IFundOperation[];
-    total: number;
+  data: IFundOperation[];
+  total: number;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface IFundOperationPreview {
+  patrimonioBase: number;
+  taxa: number;
+  clientes: { clientId: string; name: string; saldo: number; lucro: number; novoSaldo: number }[];
+}
+
+export type FundOperationPayload = {
+  data: string;
+  descricao?: string;
+  valorInvestido?: number | null;
+  valorVenda?: number | null;
+  resultado?: number | null;
+};
+
+@Injectable({ providedIn: 'root' })
 export class FundOperationsService {
-  private apiUrl = `${environment.apiUrl}/fund-operations`;
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/fund-operations`;
 
-  constructor(private http: HttpClient) { }
-
-    getFundOperations(filters: FundOperationFilters = {}): Observable<IPaginatedFundOperations> {
+  getFundOperations(filters: FundOperationFilters = {}): Observable<IPaginatedFundOperations> {
     let params = new HttpParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        params = params.append(key, String(value));
-      }
+      if (value !== undefined && value !== null && value !== '') params = params.set(key, String(value));
     });
     return this.http.get<IPaginatedFundOperations>(this.apiUrl, { params });
   }
 
-  createFundOperation(operation: Omit<IFundOperation, 'id' | 'resultado'>): Observable<IFundOperation> {
-    return this.http.post<IFundOperation>(this.apiUrl, operation);
+  /** Simula o rateio sem gravar. */
+  preview(resultado: number, data?: string): Observable<IFundOperationPreview> {
+    return this.http.post<IFundOperationPreview>(`${this.apiUrl}/preview`, { resultado, data });
   }
 
-  updateFundOperation(id: string, updates: Partial<Omit<IFundOperation, 'id' | 'resultado'>>): Observable<IFundOperation> {
-    return this.http.patch<IFundOperation>(`${this.apiUrl}/${id}`, updates);
+  createFundOperation(operation: FundOperationPayload): Observable<IFundOperation> {
+    return this.http.post<IFundOperation>(this.apiUrl, clean(operation));
+  }
+
+  updateFundOperation(id: string, updates: Partial<FundOperationPayload>): Observable<IFundOperation> {
+    return this.http.patch<IFundOperation>(`${this.apiUrl}/${id}`, clean(updates));
   }
 
   deleteFundOperation(id: string): Observable<void> {
@@ -64,3 +72,7 @@ export class FundOperationsService {
   }
 }
 
+/** Remove null/undefined: a API rejeita campos fora do DTO e null em campos numéricos. */
+function clean<T extends object>(obj: T): Partial<T> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== null && v !== undefined && v !== '')) as Partial<T>;
+}

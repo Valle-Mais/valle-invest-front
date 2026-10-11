@@ -1,82 +1,67 @@
-<div *ngIf="summary" class="space-y-8">
-  <div>
-    <h1 class="text-3xl font-bold text-slate-800 dark:text-white">Dashboard do Administrador</h1>
-    <p class="text-slate-500 dark:text-slate-400">Visão geral da plataforma e atividades recentes.</p>
-  </div>
+<div class="space-y-6">
+  <vl-page-header title="Dashboard" subtitle="Pendências, movimentações e desempenho do fundo.">
+    <vl-period-selector actions [value]="period()" (valueChange)="period.set($event)" />
+    <button vl-button actions (click)="drawerOpen.set(true)">
+      <lucide-icon name="plus" [size]="16" />Registrar operação
+    </button>
+  </vl-page-header>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Sob Gestão</h3>
-        <span class="p-2 bg-sv-green/10 rounded-full"><svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-5 w-5 text-sv-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg></span>
-      </div>
-      <p class="text-3xl font-bold text-slate-800 dark:text-white mt-2">{{ summary.totalAum | currency:'BRL':'symbol':'1.2-2' }}</p>
-    </div>
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">Clientes Ativos</h3>
-        <span class="p-2 bg-sv-gold/10 rounded-full"><svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-5 w-5 text-sv-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg></span>
-      </div>
-      <p class="text-3xl font-bold text-slate-800 dark:text-white mt-2">{{ summary.activeClients }}</p>
-    </div>
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">Operações (Mês)</h3>
-         <span class="p-2 bg-blue-500/10 rounded-full"><svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></span>
-      </div>
-      <p class="text-3xl font-bold text-slate-800 dark:text-white mt-2">{{ summary.totalOperationsLast30Days }}</p>
-    </div>
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">Novos Clientes (Mês)</h3>
-         <span class="p-2 bg-green-500/10 rounded-full"><svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg></span>
-      </div>
-      <p class="text-3xl font-bold text-slate-800 dark:text-white mt-2">+{{ summary.newClientsLast30Days }}</p>
-    </div>
-  </div>
+  @if (kpis(); as k) {
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <vl-kpi-card label="Patrimônio sob gestão" [value]="k.aum" [delta]="k.aumDelta" icon="landmark" />
+      <vl-kpi-card label="Rentabilidade" [value]="k.rent" [tone]="k.rentTone" [delta]="k.rentDelta" [deltaLabel]="periodLabel()" icon="trending-up" />
+      <vl-kpi-card
+        label="Fluxo líquido do mês"
+        [value]="k.fluxo"
+        [tone]="k.fluxoTone"
+        icon="arrow-left-right"
+        hint="Aportes aprovados menos resgates aprovados de todos os clientes no mês corrente, do dia 1 até hoje. Rendimentos não entram. Positivo: entrou mais dinheiro do que saiu."
+      />
+      <vl-kpi-card label="Pendências" [value]="k.pendentes" [tone]="pending().length > 0 ? 'negative' : 'neutral'" icon="inbox" />
+    </section>
+  } @else {
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4"><vl-skeleton class="h-28" /><vl-skeleton class="h-28" /><vl-skeleton class="h-28" /><vl-skeleton class="h-28" /></div>
+  }
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-    <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-      <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Crescimento do AUM</h3>
-      <div *ngIf="chartOptions!.series && chartOptions!.chart && chartOptions!.xaxis && chartOptions!.stroke && chartOptions!.dataLabels" id="chart">
-        <apx-chart
-          [series]="chartOptions.series"
-          [chart]="chartOptions.chart"
-          [xaxis]="chartOptions.xaxis"
-          [stroke]="chartOptions.stroke"
-          [dataLabels]="chartOptions.dataLabels"
-        ></apx-chart>
-      </div>
+  <section class="space-y-3">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-lg font-bold text-text">Aguardando aprovação</h2>
+      <a routerLink="../client-transactions" class="text-sm font-medium text-primary hover:underline">Ver todas</a>
     </div>
+    <app-pending-requests [requests]="pending()" [loading]="loadingPending()" (changed)="onPendingChanged()" />
+  </section>
 
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-[430px]">
-        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
-          <h3 class="text-sm font-semibold text-slate-800 dark:text-white">Solicitações Pendentes</h3>
-        </div>
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <section class="xl:col-span-2 rounded-xl border border-border bg-surface-raised p-5">
+      @if (summary(); as s) {
+        <app-evolution-chart [categories]="s.chartData.categories" [seriesPercent]="s.chartData.series" />
+      } @else {
+        <vl-skeleton class="h-72" />
+      }
+    </section>
 
-        <!-- Lista de Solicitações -->
-        <ul *ngIf="summary.pendingRequests.length > 0" class="divide-y divide-slate-200 dark:divide-slate-800 overflow-y-auto">
-          <li *ngFor="let req of summary.pendingRequests" class="p-4 space-y-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-            <div class="flex items-center justify-between">
-              <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ req.type }} <span *ngIf="req.asset">de {{ req.asset }}</span></p>
-              <p class="text-xs text-slate-500">{{ req.clientName }}</p>
-            </div>
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-mono" [ngClass]="{'text-green-500': req.type === 'Aporte', 'text-red-500': req.type === 'Resgate'}">
-                <span *ngIf="req.value">{{ req.value | currency:'BRL' }}</span>
-                <span *ngIf="req.quantity">{{ req.quantity }} &#64; {{ req.price | currency:'BRL' }}</span>
-              </span>
-              <a [routerLink]="['/admin/manage-client', req.userId]" class="font-semibold text-sv-green hover:underline">Processar</a>
-            </div>
-          </li>
+    <section class="rounded-xl border border-border bg-surface-raised overflow-hidden">
+      <header class="flex items-center justify-between gap-3 px-5 py-4 border-b border-border">
+        <h2 class="text-lg font-bold text-text">Últimas operações</h2>
+        <a routerLink="../fund-operations" class="text-sm font-medium text-primary hover:underline">Ver todas</a>
+      </header>
+      @if (lastOps().length === 0) {
+        <vl-empty-state icon="landmark" title="Nenhuma operação" description="Registre a primeira operação do fundo." />
+      } @else {
+        <ul class="divide-y divide-border">
+          @for (op of lastOps(); track op.id) {
+            <li class="px-5 py-3 flex items-center justify-between gap-3 text-sm">
+              <div class="min-w-0">
+                <p class="font-medium text-text truncate">{{ op.descricao || 'Operação' }}</p>
+                <p class="text-xs text-text-muted num">{{ op.data | date: 'dd/MM/yyyy' : 'UTC' }}</p>
+              </div>
+              <span class="num font-semibold shrink-0" [class]="op.resultado >= 0 ? 'text-positive' : 'text-negative'">{{ fmtSigned(op.resultado) }}</span>
+            </li>
+          }
         </ul>
-
-        <!-- Mensagem de Nenhuma Solicitação -->
-        <div *ngIf="summary.pendingRequests.length === 0" class="flex-grow flex flex-col items-center justify-center text-center p-4">
-          <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          <p class="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Nenhuma solicitação pendente.</p>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Tudo em dia!</p>
-        </div>
-    </div>
+      }
+    </section>
   </div>
+
+  <app-fund-operation-drawer [open]="drawerOpen()" (openChange)="drawerOpen.set($event)" (saved)="onOperationSaved()" />
 </div>

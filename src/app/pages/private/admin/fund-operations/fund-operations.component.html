@@ -1,1 +1,44 @@
-<p>fund-operations works!</p>
+<div class="space-y-6">
+  <vl-page-header title="Operações do fundo" subtitle="Entrada, saída e resultado de cada operação. O resultado é rateado entre os clientes ativos na proporção do saldo.">
+    <button vl-button actions (click)="openCreate()">
+      <lucide-icon name="plus" [size]="16" />Registrar operação
+    </button>
+  </vl-page-header>
+
+  <div class="rounded-xl border border-border bg-surface-raised overflow-hidden">
+    <div class="p-4 border-b border-border grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+      <vl-field label="De" inputId="f-start">
+        <input vlInput id="f-start" type="date" [ngModel]="startDate()" (ngModelChange)="setFilter('startDate', $event)" />
+      </vl-field>
+      <vl-field label="Até" inputId="f-end">
+        <input vlInput id="f-end" type="date" [ngModel]="endDate()" (ngModelChange)="setFilter('endDate', $event)" />
+      </vl-field>
+      <vl-field label="Ordenar por" inputId="f-sort">
+        <select vlInput id="f-sort" [ngModel]="sort()" (ngModelChange)="sort.set($event); page.set(1)">
+          <option value="data:desc">Mais recentes</option>
+          <option value="data:asc">Mais antigas</option>
+          <option value="valor:desc">Maior resultado</option>
+          <option value="valor:asc">Menor resultado</option>
+        </select>
+      </vl-field>
+      <div class="flex justify-end">
+        <button vl-button variant="ghost" size="sm" type="button" (click)="clearFilters()">Limpar filtros</button>
+      </div>
+    </div>
+
+    <vl-data-table [columns]="columns" [rows]="rows()" [loading]="loading()" emptyTitle="Nenhuma operação" emptyDescription="Registre a primeira operação do fundo ou ajuste os filtros.">
+      <ng-template vlCell="resultado" let-op>
+        <span [class]="op.resultado >= 0 ? 'text-positive' : 'text-negative'">{{ fmtSigned(op.resultado) }}</span>
+      </ng-template>
+      <ng-template vlCell="acoes" let-op>
+        <span class="inline-flex items-center gap-1">
+          <button vl-button variant="ghost" size="sm" type="button" title="Editar" (click)="openEdit(op)"><lucide-icon name="pencil" [size]="16" /></button>
+          <button vl-button variant="ghost" size="sm" type="button" title="Excluir" (click)="remove(op)"><lucide-icon name="trash-2" [size]="16" class="text-negative" /></button>
+        </span>
+      </ng-template>
+    </vl-data-table>
+    <vl-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
+  </div>
+
+  <app-fund-operation-drawer [open]="drawerOpen()" (openChange)="drawerOpen.set($event)" [operation]="editing()" (saved)="reload()" />
+</div>

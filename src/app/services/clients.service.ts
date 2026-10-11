@@ -1,13 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-// Interface para o Cliente/Usuário
 export interface IUser {
   id: string;
   name: string;
   email: string;
+  /** ISO */
   joinDate: string;
   status: 'Ativo' | 'Inativo';
   role: 'admin' | 'client';
@@ -15,45 +15,56 @@ export interface IUser {
   participationPercent?: number;
   /** true enquanto o usuário não definiu senha (convite pendente). */
   mustSetPassword?: boolean;
+  phone?: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class ClientsService {
-  private apiUrl = `${environment.apiUrl}/clients`; // Garanta que a rota está correta
+/** Criação pelo admin. O aporte inicial vira transação aprovada na API. */
+export interface CreateClientPayload {
+  name: string;
+  email: string;
+  role: 'admin' | 'client';
+  totalInvestido?: number;
+  phone?: string;
+}
 
-  constructor(private http: HttpClient) { }
+/** O que o admin pode alterar depois. Email, papel e saldo não passam por aqui. */
+export interface UpdateClientPayload {
+  name?: string;
+  phone?: string;
+  status?: 'Ativo' | 'Inativo';
+}
+
+@Injectable({ providedIn: 'root' })
+export class ClientsService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/clients`;
 
   getClients(): Observable<IUser[]> {
-    return this.http.get<any[]>(this.apiUrl).pipe(
-      map(users => users.map(user => {
-        if (user.joinDate && typeof user.joinDate === 'object' && user.joinDate._seconds) {
-          return { ...user, joinDate: new Date(user.joinDate._seconds * 1000).toISOString() };
-        }
-        return user;
-      }))
-    );
+    return this.http.get<IUser[]>(this.apiUrl).pipe(map((users) => users.map(normalizeDates)));
   }
 
-  /**
-   * Busca um único cliente pelo seu ID.
-   * Este método é necessário para o AuthService buscar os dados do usuário logado.
-   * @param id O ID do cliente (geralmente o 'sub' do JWT).
-   */
   getClientById(id: string): Observable<IUser> {
-    return this.http.get<IUser>(`${this.apiUrl}/${id}`);
+    return this.http.get<IUser>(`${this.apiUrl}/${id}`).pipe(map(normalizeDates));
   }
 
-  createClient(user: Partial<IUser>): Observable<IUser> {
+  createClient(user: CreateClientPayload): Observable<IUser> {
     return this.http.post<IUser>(this.apiUrl, user);
   }
 
-  updateClient(id: string, user: Partial<IUser>): Observable<IUser> {
+  updateClient(id: string, user: UpdateClientPayload): Observable<IUser> {
     return this.http.patch<IUser>(`${this.apiUrl}/${id}`, user);
   }
 
   deleteClient(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+}
+
+/** Alguns endpoints ainda devolvem Timestamp do Firestore em joinDate. */
+function normalizeDates(user: IUser & { joinDate: unknown }): IUser {
+  const raw = user.joinDate as { _seconds?: number } | string;
+  if (raw && typeof raw === 'object' && typeof raw._seconds === 'number') {
+    return { ...user, joinDate: new Date(raw._seconds * 1000).toISOString() };
+  }
+  return user as IUser;
 }

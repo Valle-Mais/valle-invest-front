@@ -1,43 +1,31 @@
-// src/app/layouts/admin/layout/layout.component.ts
+import { Component, computed, inject } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { ClientTransactionsService } from '../../../../services/client-transactions.service';
+import { VlAppShellComponent, VlNavItem } from '../../../../ui';
 
-import { Component, OnInit, signal } from '@angular/core'; // Adicione OnInit
-import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../../security/auth.service';
-import { ClientTransactionsService } from '../../../../services/client-transactions.service'; // Importe o serviço
-import { Observable, map, filter } from 'rxjs';
-
+/** Área do admin: só define o menu; a casca é o VlAppShell. */
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, VlAppShellComponent],
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.css']
 })
-export class LayoutComponent implements OnInit {
-  isMobileMenuOpen = signal(false);
-  pendingCount$!: Observable<number>; // Observable para a contagem
+export class LayoutComponent {
+  private readonly transactions = inject(ClientTransactionsService);
 
-  constructor(
-    public authService: AuthService,
-    private router: Router,
-    private clientTransactionsService: ClientTransactionsService // Injete o serviço
-  ) {
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      this.isMobileMenuOpen.set(false);
-    });
-  }
+  private readonly pendingCount = toSignal(
+    this.transactions.getPendingCount().pipe(map((r) => r.count)),
+    { initialValue: 0 },
+  );
 
-  ngOnInit(): void {
-    // Busca a contagem quando o componente é inicializado
-    this.pendingCount$ = this.clientTransactionsService.getPendingCount().pipe(
-      map(response => response.count)
-    );
-  }
+  readonly navItems = computed<VlNavItem[]>(() => [
+    { label: 'Dashboard', link: 'dashboard', icon: 'layout-dashboard', exact: true },
+    { label: 'Clientes', link: 'clients', icon: 'users' },
+    { label: 'Operações do fundo', link: 'fund-operations', icon: 'landmark' },
+    { label: 'Aportes e resgates', link: 'client-transactions', icon: 'arrow-left-right', badge: this.pendingCount() },
+  ]);
 
-  logout(): void {
-    this.authService.logout();
-  }
+  readonly bottomNav = computed<VlNavItem[]>(() => this.navItems());
 }

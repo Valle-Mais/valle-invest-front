@@ -1,1 +1,63 @@
-<p>client-transactions works!</p>
+<div class="space-y-6">
+  <vl-page-header title="Aportes e resgates" subtitle="Aprove as solicitações dos clientes e registre movimentações.">
+    <button vl-button actions (click)="openCreate()">
+      <lucide-icon name="plus" [size]="16" />Registrar
+    </button>
+  </vl-page-header>
+
+  <section class="space-y-3">
+    <h2 class="text-lg font-bold text-text">Aguardando aprovação @if (pending().length) { <span class="text-text-muted font-sans text-sm">({{ pending().length }})</span> }</h2>
+    <app-pending-requests [requests]="pending()" [loading]="loading()" (changed)="load()" />
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-lg font-bold text-text">Histórico</h2>
+    <div class="rounded-xl border border-border bg-surface-raised overflow-hidden">
+      <div class="p-4 border-b border-border grid grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+        <vl-field label="Situação" inputId="t-status">
+          <select vlInput id="t-status" [ngModel]="status()" (ngModelChange)="status.set($event); resetPage()">
+            <option value="Todos">Todas</option>
+            <option value="Aprovado">Aprovadas</option>
+            <option value="Negado">Negadas</option>
+            <option value="Pendente">Pendentes</option>
+          </select>
+        </vl-field>
+        <vl-field label="Cliente" inputId="t-client">
+          <select vlInput id="t-client" [ngModel]="clientId()" (ngModelChange)="clientId.set($event); resetPage()">
+            <option value="">Todos</option>
+            @for (c of clients(); track c.id) {
+              <option [value]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </vl-field>
+        <vl-field label="De" inputId="t-start">
+          <input vlInput id="t-start" type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event); resetPage()" />
+        </vl-field>
+        <vl-field label="Até" inputId="t-end">
+          <input vlInput id="t-end" type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event); resetPage()" />
+        </vl-field>
+        <div class="flex justify-end col-span-2 lg:col-span-1">
+          <button vl-button variant="ghost" size="sm" type="button" (click)="clearFilters()">Limpar filtros</button>
+        </div>
+      </div>
+
+      <vl-data-table [columns]="columns" [rows]="rows()" [loading]="loading()" emptyTitle="Nenhuma transação" emptyDescription="Ajuste os filtros ou registre uma movimentação.">
+        <ng-template vlCell="tipo" let-t>
+          <vl-badge [tone]="typeTone(t.tipo)">{{ t.tipo }}</vl-badge>
+        </ng-template>
+        <ng-template vlCell="status" let-t>
+          <vl-badge [tone]="statusTone(t.status)">{{ t.status }}</vl-badge>
+        </ng-template>
+        <ng-template vlCell="acoes" let-t>
+          <span class="inline-flex items-center gap-1">
+            <button vl-button variant="ghost" size="sm" type="button" title="Editar" (click)="openEdit(t)"><lucide-icon name="pencil" [size]="16" /></button>
+            <button vl-button variant="ghost" size="sm" type="button" title="Excluir" (click)="remove(t)"><lucide-icon name="trash-2" [size]="16" class="text-negative" /></button>
+          </span>
+        </ng-template>
+      </vl-data-table>
+      <vl-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
+    </div>
+  </section>
+
+  <app-admin-transaction-drawer [open]="drawerOpen()" (openChange)="drawerOpen.set($event)" [clients]="clients()" [transaction]="editing()" (saved)="load()" />
+</div>

@@ -1,0 +1,59 @@
+<vl-drawer [open]="open()" (openChange)="open.set($event)" [title]="title()">
+  <form id="fund-op-form" class="space-y-5" (ngSubmit)="save()">
+    <vl-field label="Data da operação" inputId="op-data" [required]="true">
+      <input vlInput id="op-data" name="data" type="date" required [(ngModel)]="data" />
+    </vl-field>
+    @if (retroactive()) {
+      <div class="p-3 text-xs rounded-lg bg-warning-soft text-warning">
+        Data retroativa: ao salvar, os rendimentos das operações a partir desta data são reprocessados.
+      </div>
+    }
+    <vl-field label="Descrição" inputId="op-desc" hint="Ex.: Trade PETR4, Swing VALE3">
+      <input vlInput id="op-desc" name="descricao" type="text" maxlength="100" [(ngModel)]="descricao" />
+    </vl-field>
+    <div class="grid grid-cols-2 gap-4">
+      <vl-field label="Valor de entrada" inputId="op-inv">
+        <input vlInput id="op-inv" name="valorInvestido" type="number" step="0.01" min="0" inputmode="decimal" [(ngModel)]="valorInvestido" (ngModelChange)="onValuesChange()" />
+      </vl-field>
+      <vl-field label="Valor de saída" inputId="op-venda">
+        <input vlInput id="op-venda" name="valorVenda" type="number" step="0.01" min="0" inputmode="decimal" [(ngModel)]="valorVenda" (ngModelChange)="onValuesChange()" />
+      </vl-field>
+    </div>
+    <vl-field label="Resultado (R$)" inputId="op-res" [required]="true" hint="Calculado como saída menos entrada; pode ser ajustado. Negativo para prejuízo.">
+      <input vlInput id="op-res" name="resultado" type="number" step="0.01" inputmode="decimal" required [(ngModel)]="resultado" (input)="onResultadoInput()" />
+    </vl-field>
+
+    <div class="rounded-lg border border-border bg-surface-alt/40 p-4 space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-sm font-semibold text-text">Rateio entre os clientes</p>
+        <button vl-button variant="secondary" size="sm" type="button" [loading]="previewing()" (click)="simulate()">Simular</button>
+      </div>
+      @if (preview(); as p) {
+        <p class="text-xs text-text-muted">
+          Base de <strong class="text-text num">{{ fmt(p.patrimonioBase) }}</strong> em {{ p.clientes.length }} {{ p.clientes.length === 1 ? 'cliente' : 'clientes' }} ·
+          taxa <strong class="num" [class]="p.taxa >= 0 ? 'text-positive' : 'text-negative'">{{ fmtPct(p.taxa) }}</strong>
+        </p>
+        <ul class="divide-y divide-border text-sm">
+          @for (c of p.clientes; track c.clientId) {
+            <li class="py-2 flex items-center justify-between gap-3">
+              <span class="truncate text-text">{{ c.name }}</span>
+              <span class="num font-semibold shrink-0" [class]="c.lucro >= 0 ? 'text-positive' : 'text-negative'">{{ fmtSigned(c.lucro) }}</span>
+            </li>
+          } @empty {
+            <li class="py-2 text-text-muted">Nenhum cliente com saldo positivo.</li>
+          }
+        </ul>
+      } @else {
+        <p class="text-xs text-text-muted">Veja quanto cada cliente receberia antes de salvar.</p>
+      }
+    </div>
+
+    @if (error()) {
+      <div class="p-3 text-sm rounded-lg bg-negative-soft text-negative" role="alert">{{ error() }}</div>
+    }
+  </form>
+  <div footer class="flex justify-end gap-2">
+    <button vl-button variant="secondary" type="button" (click)="open.set(false)">Cancelar</button>
+    <button vl-button type="submit" form="fund-op-form" [loading]="saving()">{{ isEdit() ? 'Salvar alterações' : 'Registrar operação' }}</button>
+  </div>
+</vl-drawer>
