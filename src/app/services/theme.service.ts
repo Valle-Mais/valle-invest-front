@@ -15,16 +15,11 @@ export class ThemeService {
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     // 2. A lógica de inicialização é movida para o construtor para ser executada assim que o serviço é criado.
     if (isPlatformBrowser(this.platformId)) {
-      const savedTheme = localStorage.getItem('theme') as Theme | null;
+      const savedTheme = localStorage.getItem('theme');
 
-      if (savedTheme) {
-        // Se houver um tema guardado, usa-o.
-        this.theme.set(savedTheme);
-      } else {
-        // Caso contrário, verifica a preferência do sistema operacional do usuário.
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        this.theme.set(prefersDark ? 'dark' : 'light');
-      }
+      // Só a escolha explícita do usuário muda o tema; o padrão é claro,
+      // sem consultar a preferência do sistema operacional.
+      this.theme.set(savedTheme === 'dark' ? 'dark' : 'light');
     }
 
     // 3. Um 'effect' é executado automaticamente sempre que o 'signal' do tema muda.
