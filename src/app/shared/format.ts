@@ -1,11 +1,11 @@
 /** Formatação pt-BR usada nas telas do cliente. Valores vêm da API como número. */
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const pct = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const pct = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pct2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const formatBrl = (v: number | null | undefined): string => (v == null ? '–' : brl.format(v));
 
-/** Decimal (0.242) → "24,2%" */
+/** Decimal (0.2425) → "24,25%" */
 export const formatPercent = (v: number | null | undefined): string => (v == null || !isFinite(v) ? '–' : pct.format(v));
 
 /** Valor já em pontos percentuais (1.63) → "1,63%" (tabela mensal) */
