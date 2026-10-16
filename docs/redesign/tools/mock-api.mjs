@@ -31,7 +31,6 @@ function monthsBack(n) {
 
 const fundMonthly = [1.4, 0.9, -0.6, 2.1, 1.7, 0.4, 1.9, -1.1, 2.4, 1.2, 0.8, 1.6, 1.1, 2.0, 0.7, 1.3, 1.8, 0.5, 2.2, -0.4];
 const cdiMonthly  = [0.97, 0.92, 1.05, 0.89, 1.01, 0.96, 1.10, 0.93, 1.02, 0.99, 0.95, 1.06, 1.01, 0.98, 1.04, 0.97, 1.02, 0.99, 1.06, 0.94];
-const ibovMonthly = [3.1, -4.2, 1.8, 0.5, -2.9, 6.1, 2.2, -1.7, 3.6, -0.8, 4.4, -3.3, 1.2, 5.0, -2.1, 0.9, 3.8, -1.4, 2.6, 1.1];
 
 function series(n) {
   const rel = monthsBack(n);
@@ -41,7 +40,7 @@ function series(n) {
     for (let i = 0; i < n; i++) { f *= 1 + arr[i % arr.length] / 100; out.push(+((f - 1) * 100).toFixed(2)); }
     return out;
   };
-  return { rel, categories: cat, fundo: acc(fundMonthly), cdi: acc(cdiMonthly), ibov: acc(ibovMonthly) };
+  return { rel, categories: cat, fundo: acc(fundMonthly), cdi: acc(cdiMonthly) };
 }
 
 function tableData(n) {
@@ -58,7 +57,6 @@ function tableData(n) {
     return { year, items: [
       { label: 'Minha Carteira', ...mk(fundMonthly) },
       { label: 'CDI', ...mk(cdiMonthly) },
-      { label: 'Ibovespa', ...mk(ibovMonthly) },
     ] };
   }).reverse();
 }
@@ -141,8 +139,8 @@ http.createServer((req, res) => {
       const twr = s.fundo.at(-1) / 100;
       return json(res, 200, {
         kpis: { saldoLivre: 0, saldoInvestido: 795130.65, patrimonioTotal: 795130.65, lucroPercentual: twr, totalOperacoes: n === 1 ? 2 : 14, usuariosAtivos: 5, fluxoLiquidoMes: 42000, pendentes: 2 },
-        rendimento: { lucroReais: 34800, lucroPercentual: twr, percentualSobreCDI: twr / (s.cdi.at(-1) / 100), percentualSobreIbov: twr / (s.ibov.at(-1) / 100) },
-        chartData: { categories: s.categories, series: [{ name: 'Fundo', data: s.fundo }, { name: 'CDI', data: s.cdi }, { name: 'Ibovespa', data: s.ibov }] },
+        rendimento: { lucroReais: 34800, lucroPercentual: twr, percentualSobreCDI: twr / (s.cdi.at(-1) / 100) },
+        chartData: { categories: s.categories, series: [{ name: 'Fundo', data: s.fundo }, { name: 'CDI', data: s.cdi }] },
       });
     }
     if (p.startsWith('/performance/')) {
@@ -150,10 +148,10 @@ http.createServer((req, res) => {
       const s = series(n);
       const twr = s.fundo.at(-1) / 100;
       return json(res, 200, {
-        cardData: { saldoAtual: 248310.55, rendimentoReais: n === 1 ? 3120.40 : 38310.55, rentabilidadePercentual: twr, percentualSobreCDI: twr / (s.cdi.at(-1) / 100), percentualSobreIbov: twr / (s.ibov.at(-1) / 100) },
+        cardData: { saldoAtual: 248310.55, rendimentoReais: n === 1 ? 3120.40 : 38310.55, rentabilidadePercentual: twr, percentualSobreCDI: twr / (s.cdi.at(-1) / 100) },
         chartData: {
           categories: s.categories,
-          series: [{ name: 'Minha Carteira', data: s.fundo }, { name: 'CDI', data: s.cdi }, { name: 'Ibovespa', data: s.ibov }],
+          series: [{ name: 'Minha Carteira', data: s.fundo }, { name: 'CDI', data: s.cdi }],
           seriesReais: [{ name: 'Patrimônio', data: s.fundo.map(v => +(210000 * (1 + v / 100)).toFixed(2)) }],
         },
         tableData: tableData(n),
