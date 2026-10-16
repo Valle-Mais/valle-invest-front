@@ -2,7 +2,7 @@ import { Component, computed, input, signal, effect } from '@angular/core';
 import { IPerformanceYear } from '../../../../services/performance.service';
 import { MONTHS_LONG, MONTHS_SHORT, formatPoints } from '../../../../shared/format';
 
-const LABELS: Record<string, string> = { Fundo: 'Carteira', CDI: 'CDI', Ibovespa: 'Ibovespa' };
+const LABELS: Record<string, string> = { Fundo: 'Carteira', CDI: 'CDI' };
 
 /** Rentabilidade mês a mês com anos em abas. Desktop: tabela com primeira coluna fixa. Mobile: lista por mês. */
 @Component({

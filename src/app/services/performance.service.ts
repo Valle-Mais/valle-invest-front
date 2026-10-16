@@ -14,7 +14,7 @@ export interface IChartSeries {
 export interface IPerformanceYear {
   year: number;
   items: {
-    label: 'Fundo' | 'CDI' | 'Ibovespa';
+    label: 'Fundo' | 'CDI';
     monthlyValues: (number | null)[];
     annualTotal: number;
   }[];
@@ -25,15 +25,14 @@ export interface IDashboardData {
   cardData: {
     saldoAtual: number;
     rendimentoReais: number;
-    /** decimal: 0.242 = 24,2% */
+    /** decimal: 0.2425 = 24,25% */
     rentabilidadePercentual: number;
     /** razão: 1.11 = 111% do CDI */
     percentualSobreCDI: number;
-    percentualSobreIbov: number;
   };
   chartData: {
     categories: string[];
-    /** Rentabilidade acumulada em %: Minha Carteira, CDI, Ibovespa */
+    /** Rentabilidade acumulada em %: Minha Carteira e CDI */
     series: IChartSeries[];
     /** Patrimônio em R$ ao fim de cada mês, mesmas categorias */
     seriesReais: IChartSeries[];
@@ -79,7 +78,6 @@ export interface IDashboardSummary {
     lucroReais: number;
     lucroPercentual: number;
     percentualSobreCDI: number;
-    percentualSobreIbov: number;
   };
   chartData: any;
 }

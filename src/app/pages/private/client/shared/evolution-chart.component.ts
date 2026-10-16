@@ -11,7 +11,7 @@ function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-/** Evolução da carteira: % acumulado (vs CDI e Ibovespa) ou patrimônio em R$. */
+/** Evolução da carteira: % acumulado (vs CDI) ou patrimônio em R$. */
 @Component({
   selector: 'app-evolution-chart',
   standalone: true,
@@ -73,7 +73,7 @@ export class EvolutionChartComponent {
       series: series.map((s) => ({ name: s.name, data: s.data })),
       chart: { type: 'area', height: 320, toolbar: { show: false }, background: 'transparent', fontFamily: 'Inter, sans-serif', foreColor: muted, animations: { enabled: false } },
       theme: { mode: dark ? 'dark' : 'light' },
-      colors: percent ? [primary, accent, muted] : [primary],
+      colors: percent ? [primary, accent] : [primary],
       stroke: { curve: 'smooth', width: 2 },
       fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 90, 100] } },
       dataLabels: { enabled: false },

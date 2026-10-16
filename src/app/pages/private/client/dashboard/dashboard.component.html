@@ -46,8 +46,8 @@
   } @else if (loading()) {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <vl-skeleton class="h-36 lg:col-span-1" />
-      <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <vl-skeleton class="h-24" /><vl-skeleton class="h-24" /><vl-skeleton class="h-24 col-span-2 sm:col-span-1" />
+      <div class="lg:col-span-2 grid grid-cols-2 gap-4">
+        <vl-skeleton class="h-24" /><vl-skeleton class="h-24" />
       </div>
     </div>
     <vl-skeleton class="h-80" />
@@ -60,10 +60,9 @@
     <!-- KPIs -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <vl-kpi-card class="lg:col-span-1" label="Patrimônio atual" [value]="cards()!.saldo" [delta]="cards()!.delta" [deltaLabel]="periodLabel()" [hero]="true" icon="wallet" />
-      <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 grid grid-cols-2 gap-4">
         <vl-kpi-card label="Rentabilidade" [value]="cards()!.rentabilidade" [tone]="cards()!.toneRent" icon="trending-up" />
         <vl-kpi-card label="vs CDI" [value]="cards()!.cdi" [tone]="cards()!.toneCdi" />
-        <vl-kpi-card class="col-span-2 sm:col-span-1" label="vs Ibovespa" [value]="cards()!.ibov" [tone]="cards()!.toneIbov" />
       </div>
     </section>
 

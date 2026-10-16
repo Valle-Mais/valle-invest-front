@@ -92,10 +92,8 @@ export class ClientDashboardComponent {
       delta: `${signed(rendimento)} · ${rendimento >= 0 ? '+' : ''}${formatPercent(d.rentabilidadePercentual)}`,
       rentabilidade: formatPercent(d.rentabilidadePercentual),
       cdi: formatPercent(d.percentualSobreCDI),
-      ibov: formatPercent(d.percentualSobreIbov),
       toneRent: tone(d.rentabilidadePercentual),
       toneCdi: tone(d.percentualSobreCDI - 1),
-      toneIbov: tone(d.percentualSobreIbov - 1),
     };
   });
 
