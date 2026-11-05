@@ -1,9 +1,13 @@
-/** Formatação pt-BR usada nas telas do cliente. Valores vêm da API como número. */
-const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+/** Formatação pt-BR usada nas telas do cliente. Valores vêm da API como número; a moeda exibida é o dólar (US$ 1.234,56). */
+const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' });
+const moneyCompact = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const pct = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pct2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export const formatBrl = (v: number | null | undefined): string => (v == null ? '–' : brl.format(v));
+export const formatMoney = (v: number | null | undefined): string => (v == null ? '–' : money.format(v));
+
+/** Sem centavos, para eixos e tooltips de gráfico. */
+export const formatMoneyCompact = (v: number): string => moneyCompact.format(v);
 
 /** Decimal (0.2425) → "24,25%" */
 export const formatPercent = (v: number | null | undefined): string => (v == null || !isFinite(v) ? '–' : pct.format(v));
@@ -11,7 +15,7 @@ export const formatPercent = (v: number | null | undefined): string => (v == nul
 /** Valor já em pontos percentuais (1.63) → "1,63%" (tabela mensal) */
 export const formatPoints = (v: number | null | undefined): string => (v == null ? '–' : `${pct2.format(v)}%`);
 
-export const signed = (v: number): string => (v > 0 ? '+' : '') + formatBrl(v);
+export const signed = (v: number): string => (v > 0 ? '+' : '') + formatMoney(v);
 
 export const MONTHS_SHORT = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 export const MONTHS_LONG = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];

@@ -5,7 +5,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ClientTransactionsService, IClientTransaction, TransactionType } from '../../../../services/client-transactions.service';
 import { ToastService, VlBadgeComponent, VlButtonComponent, VlEmptyStateComponent, VlFieldComponent, VlInputDirective, VlPageHeaderComponent, VlPeriodSelectorComponent, VlSkeletonComponent } from '../../../../ui';
-import { MONTHS_LONG, formatBrl, periodStart, signed, todayLocalIso } from '../../../../shared/format';
+import { MONTHS_LONG, formatMoney, periodStart, signed, todayLocalIso } from '../../../../shared/format';
 
 interface MonthGroup {
   key: string;
@@ -91,7 +91,7 @@ export class StatementComponent {
     return t.tipo === 'Resgate' ? 'negative' : t.tipo === 'Aporte' ? 'positive' : 'accent';
   }
 
-  fmt = formatBrl;
+  fmt = formatMoney;
   fmtSigned = signed;
 
   exportCsv(): void {
@@ -100,7 +100,7 @@ export class StatementComponent {
       this.toast.info('Nada para exportar com os filtros atuais.');
       return;
     }
-    const header = ['Data', 'Tipo', 'Descrição', 'Valor', 'Saldo após'];
+    const header = ['Data', 'Tipo', 'Descrição', 'Valor (USD)', 'Saldo após (USD)'];
     const lines = rows.map((t) => [
       new Date(t.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
       t.tipo,

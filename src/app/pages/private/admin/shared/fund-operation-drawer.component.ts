@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 import { FundOperationsService, IFundOperation, IFundOperationPreview } from '../../../../services/fund-operations.service';
 import { ToastService, VlButtonComponent, VlDrawerComponent, VlFieldComponent, VlInputDirective } from '../../../../ui';
-import { formatBrl, formatPercent, signed, todayLocalIso } from '../../../../shared/format';
+import { formatMoney, formatPercent, signed, todayLocalIso } from '../../../../shared/format';
 
 /**
  * Registrar ou editar uma operação do fundo. O resultado é calculado como
@@ -103,7 +103,7 @@ export class FundOperationDrawerComponent {
     }
     const resultado = this.resultado == null || this.resultado === ('' as unknown) ? null : Number(this.resultado);
     if (resultado === null || Number.isNaN(resultado)) {
-      this.error.set('Informe o resultado em reais (positivo ou negativo).');
+      this.error.set('Informe o resultado em dólares (positivo ou negativo).');
       return;
     }
 
@@ -134,7 +134,7 @@ export class FundOperationDrawerComponent {
     });
   }
 
-  fmt = formatBrl;
+  fmt = formatMoney;
   fmtSigned = signed;
   fmtPct = formatPercent;
 }

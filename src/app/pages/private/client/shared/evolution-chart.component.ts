@@ -2,16 +2,15 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
 import { ThemeService } from '../../../../services/theme.service';
 import { IChartSeries } from '../../../../services/performance.service';
+import { formatMoneyCompact } from '../../../../shared/format';
 
 type Mode = 'percent' | 'reais';
-
-const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-/** Evolução da carteira: % acumulado (vs CDI) ou patrimônio em R$. */
+/** Evolução da carteira: % acumulado (vs CDI) ou patrimônio em US$. */
 @Component({
   selector: 'app-evolution-chart',
   standalone: true,
@@ -26,7 +25,7 @@ function cssVar(name: string): string {
                 [class]="mode() === 'percent' ? 'bg-surface-raised text-primary shadow-sm' : 'text-text-muted hover:text-text'">% acumulado</button>
         <button type="button" role="tab" [attr.aria-selected]="mode() === 'reais'" (click)="mode.set('reais')"
                 class="px-3 py-1 rounded-md text-xs font-semibold transition-colors"
-                [class]="mode() === 'reais' ? 'bg-surface-raised text-primary shadow-sm' : 'text-text-muted hover:text-text'">R$</button>
+                [class]="mode() === 'reais' ? 'bg-surface-raised text-primary shadow-sm' : 'text-text-muted hover:text-text'">US$</button>
       </div>
       }
     </div>
@@ -80,8 +79,8 @@ export class EvolutionChartComponent {
       grid: { borderColor: border, strokeDashArray: 4, padding: { left: 8, right: 8 } },
       legend: { show: percent, position: 'top', horizontalAlign: 'right' },
       xaxis: { categories: this.categories(), axisBorder: { show: false }, axisTicks: { show: false }, labels: { rotate: 0, hideOverlappingLabels: true, trim: true }, tickAmount: 8 },
-      yaxis: { labels: { formatter: (v: number) => (percent ? `${v.toFixed(0)}%` : brl.format(v)) } },
-      tooltip: { shared: true, y: { formatter: (v: number) => (percent ? `${v.toFixed(2)}%` : brl.format(v)) } },
+      yaxis: { labels: { formatter: (v: number) => (percent ? `${v.toFixed(0)}%` : formatMoneyCompact(v)) } },
+      tooltip: { shared: true, y: { formatter: (v: number) => (percent ? `${v.toFixed(2)}%` : formatMoneyCompact(v)) } },
     };
   });
 }

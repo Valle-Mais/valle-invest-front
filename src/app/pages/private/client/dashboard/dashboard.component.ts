@@ -20,7 +20,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { EvolutionChartComponent } from '../shared/evolution-chart.component';
 import { PerformanceTableComponent } from '../shared/performance-table.component';
 import { RequestDrawerComponent } from '../shared/request-drawer.component';
-import { formatBrl, formatPercent, signed } from '../../../../shared/format';
+import { formatMoney, formatPercent, signed } from '../../../../shared/format';
 
 /**
  * Painel do cliente: "quanto tenho e quanto rendeu".
@@ -88,7 +88,7 @@ export class ClientDashboardComponent {
     if (!d) return null;
     const rendimento = d.rendimentoReais;
     return {
-      saldo: formatBrl(d.saldoAtual),
+      saldo: formatMoney(d.saldoAtual),
       delta: `${signed(rendimento)} · ${rendimento >= 0 ? '+' : ''}${formatPercent(d.rentabilidadePercentual)}`,
       rentabilidade: formatPercent(d.rentabilidadePercentual),
       cdi: formatPercent(d.percentualSobreCDI),
@@ -163,7 +163,7 @@ export class ClientDashboardComponent {
     this.loadPending();
   }
 
-  fmtBrl = formatBrl;
+  fmtMoney = formatMoney;
 }
 
 function tone(v: number): 'positive' | 'negative' | 'neutral' {

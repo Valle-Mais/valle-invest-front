@@ -9,7 +9,7 @@ import { ClientsService, IUser } from '../../../../services/clients.service';
 import { ConfirmService, ToastService, VlBadgeComponent, VlButtonComponent, VlDrawerComponent, VlFieldComponent, VlInputDirective, VlSkeletonComponent } from '../../../../ui';
 import { ClientDashboardComponent } from '../../client/dashboard/dashboard.component';
 import { AdminTransactionDrawerComponent } from '../shared/admin-transaction-drawer.component';
-import { formatBrl } from '../../../../shared/format';
+import { formatMoney } from '../../../../shared/format';
 
 /** Página do cliente para o admin: a carteira como o cliente vê, mais as ações de gestão. */
 @Component({
@@ -38,7 +38,7 @@ export class ClientDetailComponent {
   readonly editError = signal<string | null>(null);
   edit = { name: '', phone: '' };
 
-  readonly saldo = computed(() => formatBrl(this.client()?.totalInvestido ?? 0));
+  readonly saldo = computed(() => formatMoney(this.client()?.totalInvestido ?? 0));
 
   constructor() {
     effect(() => {

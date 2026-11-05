@@ -5,7 +5,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { ClientTransactionsService, IClientTransaction } from '../../../../services/client-transactions.service';
 import { VlBadgeComponent, VlButtonComponent, VlCellDirective, VlColumn, VlDataTableComponent, VlEmptyStateComponent, VlPageHeaderComponent, VlSkeletonComponent } from '../../../../ui';
 import { RequestDrawerComponent } from '../shared/request-drawer.component';
-import { formatBrl } from '../../../../shared/format';
+import { formatMoney } from '../../../../shared/format';
 
 /** Solicitações do cliente: pendentes em destaque, histórico de aportes e resgates abaixo. */
 @Component({
@@ -29,7 +29,7 @@ export class ClientRequestsComponent {
   readonly columns: VlColumn<IClientTransaction>[] = [
     { key: 'data', header: 'Data', cell: (t) => new Date(t.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' }), class: 'num' },
     { key: 'tipo', header: 'Tipo' },
-    { key: 'valor', header: 'Valor', align: 'right', class: 'num font-semibold', cell: (t) => formatBrl(t.valor) },
+    { key: 'valor', header: 'Valor', align: 'right', class: 'num font-semibold', cell: (t) => formatMoney(t.valor) },
     { key: 'status', header: 'Situação', align: 'center' },
   ];
 
@@ -63,5 +63,5 @@ export class ClientRequestsComponent {
     return tipo === 'Resgate' ? 'negative' : tipo === 'Aporte' ? 'positive' : 'accent';
   }
 
-  fmt = formatBrl;
+  fmt = formatMoney;
 }

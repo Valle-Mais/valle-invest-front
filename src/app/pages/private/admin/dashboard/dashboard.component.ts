@@ -9,7 +9,7 @@ import { VlBadgeComponent, VlButtonComponent, VlEmptyStateComponent, VlKpiCardCo
 import { EvolutionChartComponent } from '../../client/shared/evolution-chart.component';
 import { PendingRequestsComponent } from '../shared/pending-requests.component';
 import { FundOperationDrawerComponent } from '../shared/fund-operation-drawer.component';
-import { formatBrl, formatPercent, signed } from '../../../../shared/format';
+import { formatMoney, formatPercent, signed } from '../../../../shared/format';
 
 /** Dashboard do admin: o que está pendente, o que mudou e como o fundo está indo. */
 @Component({
@@ -38,7 +38,7 @@ export class AdminDashboardComponent {
     if (!s) return null;
     const r = s.rendimento.lucroPercentual;
     return {
-      aum: formatBrl(s.kpis.patrimonioTotal),
+      aum: formatMoney(s.kpis.patrimonioTotal),
       aumDelta: `${s.kpis.usuariosAtivos} ${s.kpis.usuariosAtivos === 1 ? 'cliente ativo' : 'clientes ativos'}`,
       rent: formatPercent(r),
       rentTone: r > 0 ? 'positive' : r < 0 ? 'negative' : 'neutral',

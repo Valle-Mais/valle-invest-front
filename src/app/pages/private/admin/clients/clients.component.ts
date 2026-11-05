@@ -6,7 +6,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ClientsService, IUser } from '../../../../services/clients.service';
 import { ConfirmService, ToastService, VlBadgeComponent, VlButtonComponent, VlCellDirective, VlColumn, VlDataTableComponent, VlDrawerComponent, VlFieldComponent, VlInputDirective, VlKpiCardComponent, VlPageHeaderComponent, VlPaginationComponent } from '../../../../ui';
-import { formatBrl } from '../../../../shared/format';
+import { formatMoney } from '../../../../shared/format';
 
 const PAGE_SIZE = 10;
 
@@ -39,7 +39,7 @@ export class ClientsComponent {
   readonly metrics = computed(() => {
     const clients = this.all().filter((u) => u.role === 'client');
     return {
-      total: formatBrl(clients.reduce((s, u) => s + (u.totalInvestido || 0), 0)),
+      total: formatMoney(clients.reduce((s, u) => s + (u.totalInvestido || 0), 0)),
       ativos: String(clients.filter((u) => u.status === 'Ativo').length),
       convites: String(clients.filter((u) => u.mustSetPassword).length),
     };
@@ -48,7 +48,7 @@ export class ClientsComponent {
   readonly columns: VlColumn<IUser>[] = [
     { key: 'name', header: 'Cliente' },
     { key: 'joinDate', header: 'Desde', hideOnMobile: true, cell: (u) => new Date(u.joinDate).toLocaleDateString('pt-BR') },
-    { key: 'totalInvestido', header: 'Saldo', align: 'right', class: 'num', cell: (u) => formatBrl(u.totalInvestido) },
+    { key: 'totalInvestido', header: 'Saldo', align: 'right', class: 'num', cell: (u) => formatMoney(u.totalInvestido) },
     { key: 'participationPercent', header: 'Participação', align: 'right', class: 'num', hideOnMobile: true, cell: (u) => `${(u.participationPercent ?? 0).toFixed(1).replace('.', ',')}%` },
     { key: 'status', header: 'Status', align: 'center' },
     { key: 'acoes', header: '', align: 'right' },

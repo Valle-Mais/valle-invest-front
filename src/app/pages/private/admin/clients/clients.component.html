@@ -62,7 +62,7 @@
           <input vlInput id="c-phone" name="phone" type="tel" maxlength="30" [(ngModel)]="form.phone" />
         </vl-field>
       </div>
-      <vl-field label="Aporte inicial (R$)" inputId="c-aporte" hint="Opcional. Entra como aporte aprovado na data de hoje.">
+      <vl-field label="Aporte inicial (US$)" inputId="c-aporte" hint="Opcional. Entra como aporte aprovado na data de hoje.">
         <input vlInput id="c-aporte" name="totalInvestido" type="number" min="0" step="0.01" inputmode="decimal" [(ngModel)]="form.totalInvestido" />
       </vl-field>
       @if (formError()) {

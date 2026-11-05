@@ -34,7 +34,7 @@ export interface IDashboardData {
     categories: string[];
     /** Rentabilidade acumulada em %: Minha Carteira e CDI */
     series: IChartSeries[];
-    /** Patrimônio em R$ ao fim de cada mês, mesmas categorias */
+    /** Patrimônio em US$ ao fim de cada mês, mesmas categorias */
     seriesReais: IChartSeries[];
   };
   tableData: IPerformanceYear[];

@@ -4,7 +4,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { FundOperationsService, IFundOperation } from '../../../../services/fund-operations.service';
 import { ConfirmService, ToastService, VlButtonComponent, VlCellDirective, VlColumn, VlDataTableComponent, VlFieldComponent, VlInputDirective, VlPageHeaderComponent, VlPaginationComponent } from '../../../../ui';
 import { FundOperationDrawerComponent } from '../shared/fund-operation-drawer.component';
-import { formatBrl, signed } from '../../../../shared/format';
+import { formatMoney, signed } from '../../../../shared/format';
 
 const PAGE_SIZE = 10;
 
@@ -35,8 +35,8 @@ export class FundOperationsComponent {
   readonly columns: VlColumn<IFundOperation>[] = [
     { key: 'data', header: 'Data', class: 'num', cell: (op) => new Date(op.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) },
     { key: 'descricao', header: 'Descrição', cell: (op) => op.descricao || '–' },
-    { key: 'valorInvestido', header: 'Entrada', align: 'right', class: 'num', hideOnMobile: true, cell: (op) => formatBrl(op.valorInvestido) },
-    { key: 'valorVenda', header: 'Saída', align: 'right', class: 'num', hideOnMobile: true, cell: (op) => formatBrl(op.valorVenda) },
+    { key: 'valorInvestido', header: 'Entrada', align: 'right', class: 'num', hideOnMobile: true, cell: (op) => formatMoney(op.valorInvestido) },
+    { key: 'valorVenda', header: 'Saída', align: 'right', class: 'num', hideOnMobile: true, cell: (op) => formatMoney(op.valorVenda) },
     { key: 'resultado', header: 'Resultado', align: 'right', class: 'num font-semibold' },
     { key: 'acoes', header: '', align: 'right' },
   ];

@@ -6,7 +6,7 @@ import { ClientsService, IUser } from '../../../../services/clients.service';
 import { ConfirmService, ToastService, VlBadgeComponent, VlButtonComponent, VlCellDirective, VlColumn, VlDataTableComponent, VlFieldComponent, VlInputDirective, VlPageHeaderComponent, VlPaginationComponent } from '../../../../ui';
 import { PendingRequestsComponent } from '../shared/pending-requests.component';
 import { AdminTransactionDrawerComponent } from '../shared/admin-transaction-drawer.component';
-import { formatBrl } from '../../../../shared/format';
+import { formatMoney } from '../../../../shared/format';
 
 const PAGE_SIZE = 10;
 
@@ -57,7 +57,7 @@ export class ClientTransactionsComponent {
     { key: 'data', header: 'Data', class: 'num', cell: (t) => new Date(t.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) },
     { key: 'clientName', header: 'Cliente' },
     { key: 'tipo', header: 'Tipo' },
-    { key: 'valor', header: 'Valor', align: 'right', class: 'num font-semibold', cell: (t) => formatBrl(t.valor) },
+    { key: 'valor', header: 'Valor', align: 'right', class: 'num font-semibold', cell: (t) => formatMoney(t.valor) },
     { key: 'status', header: 'Situação', align: 'center' },
     { key: 'acoes', header: '', align: 'right' },
   ];
@@ -106,7 +106,7 @@ export class ClientTransactionsComponent {
   async remove(t: IClientTransaction): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Excluir esta transação?',
-      message: `${t.tipo} de ${formatBrl(t.valor)} de ${t.clientName}.${t.status === 'Aprovado' ? '\nO saldo do cliente é recalculado e os rendimentos posteriores, reprocessados.' : ''}`,
+      message: `${t.tipo} de ${formatMoney(t.valor)} de ${t.clientName}.${t.status === 'Aprovado' ? '\nO saldo do cliente é recalculado e os rendimentos posteriores, reprocessados.' : ''}`,
       confirmLabel: 'Excluir',
       danger: true,
     });

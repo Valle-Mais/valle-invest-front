@@ -19,7 +19,7 @@
         <input vlInput id="op-venda" name="valorVenda" type="number" step="0.01" min="0" inputmode="decimal" [(ngModel)]="valorVenda" (ngModelChange)="onValuesChange()" />
       </vl-field>
     </div>
-    <vl-field label="Resultado (R$)" inputId="op-res" [required]="true" hint="Calculado como saída menos entrada; pode ser ajustado. Negativo para prejuízo.">
+    <vl-field label="Resultado (US$)" inputId="op-res" [required]="true" hint="Calculado como saída menos entrada; pode ser ajustado. Negativo para prejuízo.">
       <input vlInput id="op-res" name="resultado" type="number" step="0.01" inputmode="decimal" required [(ngModel)]="resultado" (input)="onResultadoInput()" />
     </vl-field>
 
