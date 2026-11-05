@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
+import { formatMoney } from '../../../shared/format';
 import {
   ConfirmService,
   ToastService,
@@ -69,7 +70,7 @@ export class UiKitComponent {
     { key: 'cliente', header: 'Cliente' },
     { key: 'data', header: 'Data', hideOnMobile: true },
     { key: 'tipo', header: 'Tipo' },
-    { key: 'valor', header: 'Valor (R$)', align: 'right', class: 'num', cell: (r) => r.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
+    { key: 'valor', header: 'Valor (US$)', align: 'right', class: 'num', cell: (r) => formatMoney(r.valor) },
     { key: 'status', header: 'Status', align: 'center' },
   ];
 
@@ -94,7 +95,7 @@ export class UiKitComponent {
 
   async askConfirm(danger: boolean) {
     const ok = await this.confirm.ask({
-      title: danger ? 'Excluir operação?' : 'Aprovar aporte de R$ 25.000,00?',
+      title: danger ? 'Excluir operação?' : 'Aprovar aporte de US$ 25.000,00?',
       message: danger ? 'Os rendimentos ligados a ela serão reprocessados.' : 'O saldo do cliente será recalculado pela API.',
       confirmLabel: danger ? 'Excluir' : 'Aprovar',
       danger,
